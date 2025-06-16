@@ -1,85 +1,98 @@
 import pygame as pg
-from collections import defaultdict
+from collections import defaultdict, namedtuple
+import time
 
 pg.init()
-SCREEN_SIZE = SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
-display_surface = pg.display.set_mode(SCREEN_SIZE)
+display_surface_WIDTH, display_surface_HEIGHT = 800, 600
+display_surface_SIZE = (display_surface_WIDTH, display_surface_HEIGHT)
+display_surface = pg.display.set_mode(display_surface_SIZE)
 clock = pg.time.Clock()
 
-# Game variables
+# === Data & State ===
 inventory = defaultdict(int)
 font = pg.font.Font(r"asset\font\inter24.ttf", 18)
-collection_notif: list[tuple[str, str, int, int]] = []
 
-# Simulated "ground" click zone
-ground_rect = pg.Rect((SCREEN_WIDTH//2)-50, (SCREEN_HEIGHT//2)-50, 100, 100)
+# Clickable ground
+ground_rect = pg.Rect(display_surface_WIDTH // 2 - 50, display_surface_HEIGHT // 2 - 50, 100, 100)
+# Collection notifications
+CollectionEvent = namedtuple("CollectionEvent", "item new_total delta timestamp")
+collection_log: list[CollectionEvent] = []
 
-def collect_item(item: str, ct: int = 1) -> int:
-    """
-    Adds item to inventory with ct number, returns new amount of that item.
-    """
-    inventory[item] += ct
-    # increase previous collection notif if it is the same type, otherwise add new one
-    if (len(collection_notif) > 0 and collection_notif[-1][0] == item and 
-    ((collection_notif[-1][2] > 0 and ct > 0) or (collection_notif[-1][2] < 0 and ct < 0))):
-        collection_notif[-1] = (item, inventory[item], collection_notif[-1][2] + ct, round(time))
+game_time = 0
+
+def collect_item(item: str, amount: int = 1) -> int:
+    inventory[item] += amount
+
+    # Combine with previous entry if same item and direction (gain/loss)
+    # (collection_log[-1].delta * amount > 0) checks because (positive * positive = positive) and (negative * negative = positive)
+    if (collection_log) and (collection_log[-1].item == item) and (collection_log[-1].delta * amount > 0):
+        last = collection_log.pop()
+        new_event = CollectionEvent(item, inventory[item], last.delta + amount, round(game_time))
+        collection_log.append(new_event)
     else:
-        collection_notif.append((item, inventory[item], ct, round(time)))
+        collection_log.append(CollectionEvent(item, inventory[item], amount, round(game_time)))
+
     return inventory[item]
 
-time = 0
+def draw_collection_overlay(surface):
+    max_items = 5
+    item_height = 20
+    recent = collection_log[-max_items:][::-1]
+    rendered = []
+    max_width = 0
+
+    for i, event in enumerate(recent):
+        sign = "+" if event.delta > 0 else "-"
+        msg = f"({event.timestamp}) {event.item} {sign}{abs(event.delta)}"
+        surf = font.render(msg, True, (255, 255, 255))
+        rendered.append(surf)
+        max_width = max(max_width, surf.get_width())
+
+    # Background box
+    total_height = len(rendered) * item_height
+    box_rect = pg.Rect(0, display_surface_HEIGHT - total_height, max_width + 15, total_height)
+    pg.draw.rect(surface, (100, 100, 100), box_rect)
+
+    # Draw text
+    for i, surf in enumerate(rendered):
+        y = display_surface_HEIGHT - (i + 1) * item_height
+        surface.blit(surf, (5, y))
+
+# === Main Loop ===
+
 running = True
 while running:
-    # variables
     dt = clock.tick() / 1000
-    time += dt
+    game_time += dt
 
-    # Event handling
+    # --- Events ---
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
 
-        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+        elif event.type == pg.MOUSEBUTTONDOWN:
             if ground_rect.collidepoint(event.pos):
-                collect_item("stone", 1)
-        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 2:
-            if ground_rect.collidepoint(event.pos):
-                collect_item("stone", -1)
-    
-    # logic
+                if event.button == 1:
+                    collect_item("stone", 1)
+                elif event.button == 3:
+                    collect_item("stone", -1)
+
+    # --- Logic ---
     pg.display.set_caption(f"FPS: {round(clock.get_fps())}")
 
-    # rendering
+    # --- Render ---
     display_surface.fill((30, 30, 30))
-
-    # Draw the clickable ground area
     pg.draw.rect(display_surface, (60, 60, 60), ground_rect)
 
+    # Inventory display
+    stone_display = font.render(f"Stone: {inventory['stone']}", True, (255, 255, 255))
+    display_surface.blit(stone_display, (10, 10))
 
-    # Draw inventory display
-    stone_text = font.render(f"Stone: {inventory['stone']}", True, (255, 255, 255))
-    display_surface.blit(stone_text, (10, 10))
-
-    # show latest collections
-    if len(collection_notif) > 0:        
-        collection_item_height = 20
-        collection_texts: list[tuple[pg.Surface, int]] = []
-        recent_items = collection_notif[-5:].copy()
-        recent_items.reverse()
-        longest_str = 0
-        for i, item in enumerate(recent_items):
-            y = SCREEN_HEIGHT-collection_item_height*(i+1)
-            if item[2] < 0: sign = "-"
-            else: sign = "+"
-            surf = font.render(f"({item[3]}) {item[0]} {sign}{abs(item[2])}", True, (255, 255, 255))
-            longest_str = max(longest_str, surf.get_width())
-            collection_texts.append((surf, y))
-
-        rh = collection_item_height*len(collection_texts)
-        pg.draw.rect(display_surface, (100, 100, 100), (0, SCREEN_HEIGHT-(rh), longest_str+15, rh))
-        for text in collection_texts:
-            display_surface.blit(text[0], (5, text[1]))
-
+    # Notifications
+    if collection_log:
+        draw_collection_overlay(display_surface)
+    
+    # Finish up
     pg.display.update()
 
 pg.quit()
