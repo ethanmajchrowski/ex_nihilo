@@ -1,0 +1,34 @@
+from collections import defaultdict, namedtuple
+
+class InventoryManager:
+    CollectionEvent = namedtuple("CollectionEvent", "item new_total delta timestamp")
+    def __init__(self):
+        self.global_inventory = defaultdict(int)
+        # Collection notifications
+        self.collection_log: list[InventoryManager.CollectionEvent] = []
+
+    def collect_item(self, inventory, item: str, game_time: float | int, amount: int = 1) -> int:
+        inventory[item] += amount
+
+        if inventory != self.global_inventory:
+            return
+
+        # Combine with previous entry if same item and direction (gain/loss)
+        # (collection_log[-1].delta * amount > 0) checks because (positive * positive = positive) and (negative * negative = positive)
+        if (self.collection_log) and (self.collection_log[-1].item == item) and (self.collection_log[-1].delta * amount > 0):
+            last = self.collection_log.pop()
+            new_event = InventoryManager.CollectionEvent(item, inventory[item], last.delta + amount, round(game_time))
+            self.collection_log.append(new_event)
+        else:
+            self.collection_log.append(InventoryManager.CollectionEvent(item, inventory[item], amount, round(game_time)))
+
+        return inventory[item]
+
+    def transfer_item(self, inventory1, inventory2, item, count, game_time):
+        """
+        Transfers count of item from inventory1 to inventory2
+        """
+        if inventory1[item] - count < 0:
+            return
+        self.collect_item(inventory1, item, game_time, -count)
+        self.collect_item(inventory2, item, game_time,  count)
