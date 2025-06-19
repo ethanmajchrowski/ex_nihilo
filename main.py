@@ -6,6 +6,8 @@ from math import dist
 from module.inventory import InventoryManager
 from module.machine import RockCrusher, Machine
 from module.asset import ASSETS, load_assets
+from module.conveyor import Conveyor, BeltItem
+from module.node import IONode
 
 import module.node
 import settings
@@ -30,6 +32,9 @@ hovering_obj = None
 selected_obj = None
 
 inventory_manager = InventoryManager()
+
+conveyor_start = ((0, 0), None)
+placing_conveyor = False
 
 # === Functions === #
 
@@ -79,32 +84,21 @@ def draw_collection_overlay(surface):
 
 # === Main Loop ===
 add_world_object(RockCrusher((200, 200)))
+add_world_object(RockCrusher((500, 200)))
+add_world_object(Conveyor(world_objects[0].nodes[1], world_objects[1].nodes[0], inventory_manager))
 
 running = True
 while running:
     dt = clock.tick() / 1000
     game_time += dt
+    keys = pg.key.get_pressed()
+    mouse_pos = pg.mouse.get_pos()
 
     # --- Events ---
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
 
-        elif event.type == pg.MOUSEBUTTONDOWN:
-            if ground_rect.collidepoint(event.pos):
-                if event.button == 1:
-                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", game_time, 1)
-                elif event.button == 3:
-                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", game_time, -1)
-            elif hovering_obj is not None:
-                selected_obj = hovering_obj
-                if isinstance(selected_obj, module.node.IONode):
-                    if isinstance(selected_obj.machine, RockCrusher):
-                        if selected_obj.kind == "input":
-                            inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, game_time)
-                        else:
-                            inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, game_time)
-        
         elif event.type == pg.MOUSEMOTION:
             hovering_obj = None
             for obj in world_objects:
@@ -117,12 +111,48 @@ while running:
                         # No node found, but mouse is over machine
                         hovering_obj = obj
                     break  # Stop after first matching object
+        
+        elif event.type == pg.KEYDOWN:
+            if event.key == pg.K_h:
+                for obj in world_objects:
+                    if isinstance(obj, Conveyor):
+                        obj.items.append(BeltItem("stone"))
+
+        elif event.type == pg.MOUSEBUTTONDOWN:
+            if ground_rect.collidepoint(event.pos):
+                if event.button == 1:
+                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", game_time, 1)
+                elif event.button == 3:
+                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", game_time, -1)
+            elif hovering_obj is not None:
+                selected_obj = hovering_obj
+                if isinstance(selected_obj, module.node.IONode):
+                    if keys[pg.K_g] and selected_obj.kind == "output": # if placing conveyor and hovering over output node
+                        conveyor_start = (event.pos, selected_obj)
+                        placing_conveyor = True
+                        print('started conveyor')
+                    elif isinstance(selected_obj.machine, RockCrusher):
+                        if selected_obj.kind == "input":
+                            inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, game_time)
+                        else:
+                            inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, game_time)
+        
+        elif event.type == pg.MOUSEBUTTONUP:
+            if placing_conveyor:
+                placing_conveyor = False
+                if hovering_obj is not None:
+                    print('finished conveyor')
+                    # TODO: get nearest node to end of conveyor.
+                    add_world_object(Conveyor(conveyor_start[0], event.pos, 100, None, conveyor_start[1], inventory_manager))
+        
 
     # --- Logic ---
     pg.display.set_caption(f"FPS: {round(clock.get_fps())}")
     for obj in world_objects:
         if isinstance(obj, Machine):
             obj.update(dt)
+        if isinstance(obj, Conveyor):
+            obj.update(dt, game_time)
 
     # --- Render ---
     display_surface.fill((30, 30, 30))
@@ -131,12 +161,22 @@ while running:
     for obj in world_objects:
         if isinstance(obj, Machine):
             draw_machine(display_surface, obj, ASSETS)
+        if isinstance(obj, Conveyor):
+            pg.draw.line(display_surface, (255, 255, 255), obj.start, obj.end, 5)
+            obj.draw_items(display_surface)
 
     # inventory_manager display
     item_display = font.render(f"Stone: {inventory_manager.global_inventory['stone']}", True, (255, 255, 255))
     display_surface.blit(item_display, (10, 10))
     item_display = font.render(f"Gravel: {inventory_manager.global_inventory['gravel']}", True, (255, 255, 255))
     display_surface.blit(item_display, (10, 10+item_display.get_height()))
+
+    # IONode contents hover
+    if hovering_obj is not None:
+        if isinstance(hovering_obj, IONode):
+            contents = hovering_obj.machine.input_inventory if hovering_obj.kind == "input" else hovering_obj.machine.output_inventory
+            contents = font.render("\n".join(f"{k}: {v}" for k, v in contents.items()), True, (255, 255, 255), (0, 0, 0))
+            display_surface.blit(contents, contents.get_rect(bottomleft = mouse_pos))
 
     # Notifications
     if inventory_manager.collection_log:

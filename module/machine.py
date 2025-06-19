@@ -15,6 +15,7 @@ class Machine:
         self.progress = 0
         self.time_to_process: float
 
+        self.rect = rect.Rect()
         self.rect.size = (48, 48)
         self.rect.center = self.pos
 
@@ -37,7 +38,7 @@ class RockCrusher(Machine):
                 self.input_inventory["stone"] -= 1
                 self.output_inventory["gravel"] += 1
                 self.progress = 0
-                print("done!")
+                print("rock crusher done!")
 
 class Importer(Machine):
     def __init__(self, pos):

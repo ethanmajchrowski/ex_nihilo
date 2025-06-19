@@ -24,7 +24,7 @@ class InventoryManager:
 
         return inventory[item]
 
-    def transfer_item(self, inventory1, inventory2, item, count, game_time):
+    def transfer_item(self, inventory1, inventory2, item: str, count: int, game_time):
         """
         Transfers count of item from inventory1 to inventory2
         """
