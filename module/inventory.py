@@ -7,7 +7,7 @@ class InventoryManager:
         # Collection notifications
         self.collection_log: list[InventoryManager.CollectionEvent] = []
 
-    def collect_item(self, inventory, item: str, game_time: float | int, amount: int = 1) -> int:
+    def collect_item(self, inventory, item: str, game_time: float | int, amount: int = 1) -> int | None:
         inventory[item] += amount
 
         if inventory != self.global_inventory:

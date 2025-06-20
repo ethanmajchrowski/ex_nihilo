@@ -97,5 +97,6 @@ class Importer(Machine):
 
         # we have at least one item with a count within the input inventory
         if self.progress >= self.time_to_process:
-            self.inventory_manager.transfer_item(self.input_inventory, self.inventory_manager.global_inventory, self.removing_item, 1)
-            self.progress = 0
+            if type(self.removing_item) == str:
+                self.inventory_manager.transfer_item(self.input_inventory, self.inventory_manager.global_inventory, self.removing_item, 1)
+                self.progress = 0

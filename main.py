@@ -25,7 +25,7 @@ font = pg.font.Font(r"asset\font\inter24.ttf", 18)
 ground_rect = pg.Rect(settings.display_surface_WIDTH // 2 - 50, settings.display_surface_HEIGHT // 2 - 50, 100, 100)
 
 # Running time for notifications, etc.
-game_time = 0
+game_time = 0.0
 # Store objects in the game world
 world_objects = []
 hovering_obj = None
@@ -137,11 +137,11 @@ while running:
                     elif isinstance(selected_obj.machine, RockCrusher):
                         if selected_obj.kind == "input":
                             if event.button == 1:
-                                inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, game_time)
+                                inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, int(game_time))
                             elif event.button == 3:
-                                inventory_manager.transfer_item(selected_obj.machine.input_inventory, inventory_manager.global_inventory, "any", 1, game_time)
+                                inventory_manager.transfer_item(selected_obj.machine.input_inventory, inventory_manager.global_inventory, "any", 1, int(game_time))
                         else:
-                            inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, game_time)
+                            inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, int(game_time))
         
         elif event.type == pg.MOUSEBUTTONUP:
             if conveyor_start is not None:
