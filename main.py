@@ -128,9 +128,9 @@ while running:
                 selected_obj = hovering_obj
                 if isinstance(selected_obj, module.node.IONode):
                     if keys[pg.K_g] and selected_obj.kind == "output": # if placing conveyor and hovering over output node
-                        conveyor_start = (event.pos, selected_obj)
-                        placing_conveyor = True
+                        conveyor_start = selected_obj
                         print('started conveyor')
+                    
                     elif isinstance(selected_obj.machine, RockCrusher):
                         if selected_obj.kind == "input":
                             inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, game_time)
@@ -138,13 +138,13 @@ while running:
                             inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, game_time)
         
         elif event.type == pg.MOUSEBUTTONUP:
-            if placing_conveyor:
-                placing_conveyor = False
-                if hovering_obj is not None:
+            if conveyor_start is not None:
+                if isinstance(hovering_obj, IONode) and hovering_obj.kind == "input":
                     print('finished conveyor')
-                    # TODO: get nearest node to end of conveyor.
-                    add_world_object(Conveyor(conveyor_start[0], event.pos, 100, None, conveyor_start[1], inventory_manager))
-        
+                    # TODO: do not allow conveyors with identical start and end nodes
+                    add_world_object(Conveyor(conveyor_start, hovering_obj, inventory_manager))
+                
+                conveyor_start = None
 
     # --- Logic ---
     pg.display.set_caption(f"FPS: {round(clock.get_fps())}")
@@ -164,6 +164,9 @@ while running:
         if isinstance(obj, Conveyor):
             pg.draw.line(display_surface, (255, 255, 255), obj.start, obj.end, 5)
             obj.draw_items(display_surface)
+    
+    if conveyor_start is not None:
+        pg.draw.line(display_surface, (255, 255, 255), conveyor_start.abs_pos, mouse_pos, 5)
 
     # inventory_manager display
     item_display = font.render(f"Stone: {inventory_manager.global_inventory['stone']}", True, (255, 255, 255))
