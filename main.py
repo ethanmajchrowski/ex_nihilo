@@ -4,7 +4,7 @@ from math import dist
 
 # === Project modules === #
 from module.inventory import InventoryManager
-from module.machine import RockCrusher, Machine
+from module.machine import RockCrusher, Machine, Importer
 from module.asset import ASSETS, load_assets
 from module.conveyor import Conveyor, BeltItem
 from module.node import IONode
@@ -84,8 +84,9 @@ def draw_collection_overlay(surface):
 
 # === Main Loop ===
 add_world_object(RockCrusher((200, 200)))
-add_world_object(RockCrusher((500, 200)))
-add_world_object(Conveyor(world_objects[0].nodes[1], world_objects[1].nodes[0], inventory_manager))
+# add_world_object(RockCrusher((500, 200)))
+add_world_object(Importer((500, 400), inventory_manager))
+# add_world_object(Conveyor(world_objects[0].nodes[1], world_objects[1].nodes[0], inventory_manager))
 
 running = True
 while running:

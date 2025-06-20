@@ -41,10 +41,30 @@ class RockCrusher(Machine):
                 print("rock crusher done!")
 
 class Importer(Machine):
-    def __init__(self, pos):
+    def __init__(self, pos, inventory_manager: InventoryManager):
         super().__init__(pos, "Importer")
         self.recipe = {}
         self.time_to_process = 1.0
 
-        self.nodes.append(node.IONode(self, "input"))
+        self.removing_item: None | str = None
+
+        self.nodes.append(node.IONode(self, "input", (-0.9, 0.0)))
+
+        self.inventory_manager = inventory_manager
+    
+    def update(self, dt):
+        if self.progress < self.time_to_process:
+            self.progress += dt
+
+        for item in self.input_inventory:
+            if self.input_inventory[item] > 0:
+                self.removing_item = item
+                break
+        else:
+            self.removing_item = None
+            return
         
+        # we have at least one item with a count within the input inventory
+        if self.progress >= self.time_to_process:
+            self.inventory_manager.transfer_item(self.input_inventory, self.inventory_manager.global_inventory, self.removing_item, 1)
+            self.progress = 0
