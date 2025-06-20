@@ -19,6 +19,10 @@ class Machine:
         self.rect.size = (48, 48)
         self.rect.center = self.pos
 
+        self.frame: int
+        self.frame_time: float
+        self.num_frames: int
+
     def update(self, dt):
         raise NotImplementedError("Override Machine update function")  # Override in subclasses
 
@@ -26,7 +30,11 @@ class RockCrusher(Machine):
     def __init__(self, pos):
         super().__init__(pos, "RockCrusher")
         self.recipe = {"stone": 1, "gravel": 1} #input\output
-        self.time_to_process = 2.0  # seconds
+        # self.time_to_process = 2.0  # seconds
+        self.time_to_process = 0.5  # seconds
+        self.frame = 0
+        self.num_frames = 30
+        self.frame_time = 0
 
         self.nodes.append(node.IONode(self, "input", (-0.9, 0)))
         self.nodes.append(node.IONode(self, "output", (0.9, 0)))
@@ -39,6 +47,15 @@ class RockCrusher(Machine):
                 self.output_inventory["gravel"] += 1
                 self.progress = 0
                 print("rock crusher done!")
+        
+            # only make animation advance when machine is running
+            self.frame_time += dt
+            if self.frame_time > 1/24:
+                self.frame += 1
+                self.frame_time = 0
+            
+            if self.frame > self.num_frames:
+                self.frame = 0
 
 class Importer(Machine):
     def __init__(self, pos, inventory_manager: InventoryManager):

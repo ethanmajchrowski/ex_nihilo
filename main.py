@@ -47,7 +47,10 @@ def update_world_objects(dt):
             obj.update(dt)
 
 def draw_machine(surface: pg.Surface, machine: Machine, assets):
-    img: pg.Surface = getattr(assets.machine, machine.type)
+    if hasattr(machine, "frame"):
+        img: pg.Surface = getattr(assets.machine, machine.type)[machine.frame]
+    else:
+        img: pg.Surface = getattr(assets.machine, machine.type)
     surface.blit(img, machine.rect)
 
     if machine.nodes:
