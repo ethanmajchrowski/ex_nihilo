@@ -137,7 +137,10 @@ while running:
                     
                     elif isinstance(selected_obj.machine, RockCrusher):
                         if selected_obj.kind == "input":
-                            inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, game_time)
+                            if event.button == 1:
+                                inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, game_time)
+                            elif event.button == 3:
+                                inventory_manager.transfer_item(selected_obj.machine.input_inventory, inventory_manager.global_inventory, "any", 1, game_time)
                         else:
                             inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, game_time)
         
