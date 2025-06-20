@@ -64,6 +64,10 @@ class Importer(Machine):
         self.recipe = {}
         self.time_to_process = 1.0
 
+        self.frame = 0
+        self.num_frames = 59
+        self.frame_time = 0
+
         self.removing_item: None | str = None
 
         self.nodes.append(node.IONode(self, "input", (-0.9, 0.0)))
@@ -82,6 +86,15 @@ class Importer(Machine):
             self.removing_item = None
             return
         
+        # only make animation advance when machine is running
+        self.frame_time += dt
+        if self.frame_time > 1/24:
+            self.frame += 1
+            self.frame_time = 0
+        
+        if self.frame > self.num_frames: # restart animation
+            self.frame = 0
+
         # we have at least one item with a count within the input inventory
         if self.progress >= self.time_to_process:
             self.inventory_manager.transfer_item(self.input_inventory, self.inventory_manager.global_inventory, self.removing_item, 1)

@@ -69,7 +69,7 @@ def draw_collection_overlay(surface):
 
     for i, event in enumerate(recent):
         sign = "+" if event.delta > 0 else "-"
-        msg = f"({event.timestamp}) {event.item} {sign}{abs(event.delta)}"
+        msg = f"{sign}{abs(event.delta)} {event.item.title()}"
         surf = font.render(msg, True, (255, 255, 255))
         rendered.append(surf)
         max_width = max(max_width, surf.get_width())
