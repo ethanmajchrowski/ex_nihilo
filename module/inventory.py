@@ -24,11 +24,25 @@ class InventoryManager:
 
         return inventory[item]
 
-    def transfer_item(self, inventory1, inventory2, item: str, count: int, game_time):
+    def transfer_item(self, inventory1, inventory2, item: str, count: int, game_time = 0):
         """
         Transfers count of item from inventory1 to inventory2
         """
+        
+        if item == "any": # remove first occurance of item with count greater than 0
+            # print(item)
+            for other_item in inventory1:
+                # print(other_item)
+                if inventory1[other_item] > 0:
+                    item = other_item
+                    print(f'found first full item {other_item}')
+                    break
+            else:
+                return
+        
         if inventory1[item] - count < 0:
+            print("no items left")
             return
+        
         self.collect_item(inventory1, item, game_time, -count)
         self.collect_item(inventory2, item, game_time,  count)

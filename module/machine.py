@@ -1,6 +1,7 @@
 from collections import defaultdict
 import module.node as node
 from pygame import rect
+from module.inventory import InventoryManager
 
 class Machine:
     def __init__(self, pos, type_name: str):

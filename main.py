@@ -33,8 +33,7 @@ selected_obj = None
 
 inventory_manager = InventoryManager()
 
-conveyor_start = ((0, 0), None)
-placing_conveyor = False
+conveyor_start = None
 
 # === Functions === #
 
