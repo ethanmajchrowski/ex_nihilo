@@ -1,102 +1,126 @@
 from collections import defaultdict
-import module.node as node
+import module.node as Node
 from pygame import rect
-from module.inventory import InventoryManager
+
+
+from typing import Callable, TYPE_CHECKING
+# if TYPE_CHECKING:
+#     from module.inventory import InventoryManager
+
+class Recipe:
+    def __init__(self, input_items: dict[str, int], output_items: dict[str, int], duration: float):
+        self.inputs = input_items
+        self.outputs = output_items
+        self.duration = duration
+
+class MachineType:
+    def __init__(self, name: str, recipes: list[Recipe], nodes: list[tuple[str, tuple[float, float], str]],
+                 asset_info: dict, custom_update: None | Callable = None):
+        self.name = name
+        self.recipes = recipes  # None for machines like Importer
+        self.nodes = nodes    # [("input", (-0.9, 0)), ("output", (0.9, 0))]
+        self.asset_info = asset_info  # {"image": "asset/machine/rock_crusher.png", "frames": 1}
+        self.custom_update = custom_update  # Optional function for specialized behavior
 
 class Machine:
-    def __init__(self, pos, type_name: str):
-        self.type = type_name
-        self.pos = pos  # World coordinates
-        self.nodes: list[node.IONode] = []
+    def __init__(self, pos, mtype: MachineType, contexts: list | None = None) -> None:
+        self.pos = pos
+        self.type = mtype.name
+        self.mtype = mtype
 
-        self.input_inventory = defaultdict(int)
-        self.output_inventory = defaultdict(int)
-        self.recipe: None | dict = None
+        self.rect = rect.Rect(0, 0, 48, 48)
+        self.rect.center = pos
 
+        self.nodes = [Node.IONode(self, kind, offset, node_type) for kind, offset, node_type in mtype.nodes]
         self.progress = 0
-        self.time_to_process: float
+        self.selected_recipe_index = 0
 
-        self.rect = rect.Rect()
-        self.rect.size = (48, 48)
-        self.rect.center = self.pos
-
-        self.frame: int
-        self.frame_time: float
-        self.num_frames: int
-
-    def update(self, dt):
-        raise NotImplementedError("Override Machine update function")  # Override in subclasses
-
-class RockCrusher(Machine):
-    def __init__(self, pos):
-        super().__init__(pos, "RockCrusher")
-        self.recipe = {"stone": 1, "gravel": 1} #input\output
-        # self.time_to_process = 2.0  # seconds
-        self.time_to_process = 0.5  # seconds
-        self.frame = 0
-        self.num_frames = 30
-        self.frame_time = 0
-
-        self.nodes.append(node.IONode(self, "input", (-0.9, 0)))
-        self.nodes.append(node.IONode(self, "output", (0.9, 0)))
-
-    def update(self, dt):
-        if self.input_inventory["stone"] >= 1:
-            self.progress += dt
-            if self.progress >= self.time_to_process:
-                self.input_inventory["stone"] -= 1
-                self.output_inventory["gravel"] += 1
-                self.progress = 0
-                print("rock crusher done!")
-        
-            # only make animation advance when machine is running
-            self.frame_time += dt
-            if self.frame_time > 1/24:
-                self.frame += 1
-                self.frame_time = 0
-            
-            if self.frame > self.num_frames:
-                self.frame = 0
-
-class Importer(Machine):
-    def __init__(self, pos, inventory_manager: InventoryManager):
-        super().__init__(pos, "Importer")
-        self.recipe = {}
-        self.time_to_process = 1.0
-
-        self.frame = 0
-        self.num_frames = 59
-        self.frame_time = 0
-
-        self.removing_item: None | str = None
-
-        self.nodes.append(node.IONode(self, "input", (-0.9, 0.0)))
-
-        self.inventory_manager = inventory_manager
+        # contexts to give machines references
+        if contexts is None:
+            contexts = []
+        self.contexts = contexts
     
     def update(self, dt):
-        if self.progress < self.time_to_process:
-            self.progress += dt
-
-        for item in self.input_inventory:
-            if self.input_inventory[item] > 0:
-                self.removing_item = item
-                break
-        else:
-            self.removing_item = None
+        if self.mtype.custom_update:
+            self.mtype.custom_update(self, dt)
             return
         
-        # only make animation advance when machine is running
-        self.frame_time += dt
-        if self.frame_time > 1/24:
-            self.frame += 1
-            self.frame_time = 0
+        recipe = self.mtype.recipes[self.selected_recipe_index]
+        if not recipe: 
+            # no recipe selected and no custom_update function, so do nothing
+            return
         
-        if self.frame > self.num_frames: # restart animation
-            self.frame = 0
+        # collect items from nodes
+        input_nodes = [n for n in self.nodes if n.kind == "input" and n.node_type == Node.NodeTypes.ITEM]
+        output_nodes = [n for n in self.nodes if n.kind == "output" and n.node_type == Node.NodeTypes.ITEM]
 
-        # we have at least one item with a count within the input inventory
-        if self.progress >= self.time_to_process:
-            if type(self.removing_item) == str:
-                self.inventory_manager.transfer_item(self.input_inventory, self.inventory_manager.global_inventory, self.removing_item, 1)
-                self.progress = 0
+        # congregate items from all nodes (don't care which node has which item for now
+        combined_inputs = defaultdict(int)
+        for node in input_nodes:
+            for item, count in node.inventory.items():
+                combined_inputs[item] += count
+        
+        # see if selected recipe is able to run (have enough input items across all nodes)
+        if all(combined_inputs[item] >= amt for item, amt in recipe.inputs.items()):
+            # == Check output nodes for valid space == #
+            # Clone real output node inventories for simulation
+            simulated_nodes = [dict(node.inventory) for node in output_nodes]
+
+            for item, amt in recipe.outputs.items():
+                remaining = amt
+
+                for idx, node in enumerate(output_nodes):
+                    current_total = sum(simulated_nodes[idx].values())
+                    space_left = node.capacity - current_total
+
+                    if space_left <= 0:
+                        continue
+
+                    to_add = min(remaining, space_left)
+                    simulated_nodes[idx][item] = simulated_nodes[idx].get(item, 0) + to_add
+                    remaining -= to_add
+
+                    if remaining == 0:
+                        break
+
+                # If after all nodes we still have leftovers → can't process
+                if remaining > 0:
+                    # print(f"Recipe({recipe.inputs} -> {recipe.outputs}) not running -- outputs would overflow!")
+                    return  # Output would overflow
+
+            # now we can perform the recipe
+            self.progress += dt
+            if self.progress >= recipe.duration:
+                self.progress = 0.0
+                # consume input items from input nodes
+                for item, amt in recipe.inputs.items():
+                    remaining = amt
+                    for node in input_nodes:
+                        take = min(node.inventory[item], remaining)
+                        node.inventory[item] -= take
+                        remaining -= take
+                        if remaining == 0:
+                            break
+                
+                # output to first available output node
+                for item, amt in recipe.outputs.items():
+                    remaining = amt
+
+                    for node in output_nodes:
+                        current_total = sum(node.inventory.values())
+                        space_left = node.capacity - current_total
+
+                        if space_left <= 0:
+                            continue
+
+                        to_add = min(remaining, space_left)
+                        node.inventory[item] += to_add
+                        remaining -= to_add
+
+                        if remaining == 0:
+                            break
+
+                    if remaining > 0:
+                        print(f"[WARNING] Output overflow during execution of {self.type}: {item} x{remaining}")
+
+                print(f"{self.type} finished recipe ({recipe.inputs} -> {recipe.outputs}) ({recipe.duration}s)")

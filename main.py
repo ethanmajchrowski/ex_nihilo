@@ -1,13 +1,15 @@
 # === Python modules === #
 import pygame as pg
 from math import dist
+from types import SimpleNamespace
 
 # === Project modules === #
 from module.inventory import InventoryManager
-from module.machine import RockCrusher, Machine, Importer
+from module.machine import Machine
 from module.asset import ASSETS, load_assets
 from module.conveyor import Conveyor, BeltItem
 from module.node import IONode
+from module.machine_types import ROCK_CRUSHER, IMPORTER
 
 import module.node
 import settings
@@ -25,13 +27,13 @@ font = pg.font.Font(r"asset\font\inter24.ttf", 18)
 ground_rect = pg.Rect(settings.display_surface_WIDTH // 2 - 50, settings.display_surface_HEIGHT // 2 - 50, 100, 100)
 
 # Running time for notifications, etc.
-game_time = 0.0
+game_state = SimpleNamespace(game_time=0.0)
 # Store objects in the game world
 world_objects = []
 hovering_obj = None
 selected_obj = None
 
-inventory_manager = InventoryManager()
+inventory_manager = InventoryManager(game_state)
 
 conveyor_start = None
 
@@ -46,11 +48,12 @@ def update_world_objects(dt):
             obj.update(dt)
 
 def draw_machine(surface: pg.Surface, machine: Machine, assets):
-    if hasattr(machine, "frame"):
-        img: pg.Surface = getattr(assets.machine, machine.type)[machine.frame]
-    else:
-        img: pg.Surface = getattr(assets.machine, machine.type)
-    surface.blit(img, machine.rect)
+    # if hasattr(machine, "frame"):
+    #     img: pg.Surface = getattr(assets.machine, machine.type)[machine.frame]
+    # else:
+    #     img: pg.Surface = getattr(assets.machine, machine.type)
+    # surface.blit(img, machine.rect)
+    pg.draw.rect(surface, (255, 255, 255), machine.rect)
 
     if machine.nodes:
         for node in machine.nodes:
@@ -85,15 +88,15 @@ def draw_collection_overlay(surface):
         surface.blit(surf, (5, y))
 
 # === Main Loop ===
-add_world_object(RockCrusher((200, 200)))
+add_world_object(Machine((200, 200), ROCK_CRUSHER))
 # add_world_object(RockCrusher((500, 200)))
-add_world_object(Importer((500, 400), inventory_manager))
+add_world_object(Machine((500, 400), IMPORTER, [inventory_manager]))
 # add_world_object(Conveyor(world_objects[0].nodes[1], world_objects[1].nodes[0], inventory_manager))
 
 running = True
 while running:
     dt = clock.tick() / 1000
-    game_time += dt
+    game_state.game_time += dt
     keys = pg.key.get_pressed()
     mouse_pos = pg.mouse.get_pos()
 
@@ -124,9 +127,9 @@ while running:
         elif event.type == pg.MOUSEBUTTONDOWN:
             if ground_rect.collidepoint(event.pos):
                 if event.button == 1:
-                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", game_time, 1)
+                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", 1)
                 elif event.button == 3:
-                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", game_time, -1)
+                    inventory_manager.collect_item(inventory_manager.global_inventory, "stone", -1)
             elif hovering_obj is not None:
                 selected_obj = hovering_obj
                 if isinstance(selected_obj, module.node.IONode):
@@ -134,14 +137,14 @@ while running:
                         conveyor_start = selected_obj
                         print('started conveyor')
                     
-                    elif isinstance(selected_obj.machine, RockCrusher):
+                    elif selected_obj.machine.mtype.name == "RockCrusher":
                         if selected_obj.kind == "input":
                             if event.button == 1:
-                                inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.machine.input_inventory, "stone", 1, int(game_time))
+                                inventory_manager.transfer_item(inventory_manager.global_inventory, selected_obj.inventory, "stone", 1)
                             elif event.button == 3:
-                                inventory_manager.transfer_item(selected_obj.machine.input_inventory, inventory_manager.global_inventory, "any", 1, int(game_time))
+                                inventory_manager.transfer_item(selected_obj.inventory, inventory_manager.global_inventory, "any", 1)
                         else:
-                            inventory_manager.transfer_item(selected_obj.machine.output_inventory, inventory_manager.global_inventory, "gravel", 1, int(game_time))
+                            inventory_manager.transfer_item(selected_obj.inventory, inventory_manager.global_inventory, "gravel", 1)
         
         elif event.type == pg.MOUSEBUTTONUP:
             if conveyor_start is not None:
@@ -158,7 +161,7 @@ while running:
         if isinstance(obj, Machine):
             obj.update(dt)
         if isinstance(obj, Conveyor):
-            obj.update(dt, game_time)
+            obj.update(dt, game_state.game_time)
 
     # --- Render ---
     display_surface.fill((30, 30, 30))
@@ -183,7 +186,7 @@ while running:
     # IONode contents hover
     if hovering_obj is not None:
         if isinstance(hovering_obj, IONode):
-            contents = hovering_obj.machine.input_inventory if hovering_obj.kind == "input" else hovering_obj.machine.output_inventory
+            contents = hovering_obj.inventory
             contents = font.render("\n".join(f"{k}: {v}" for k, v in contents.items()), True, (255, 255, 255), (0, 0, 0))
             display_surface.blit(contents, contents.get_rect(bottomleft = mouse_pos))
 

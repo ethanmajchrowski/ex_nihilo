@@ -38,7 +38,7 @@ class Conveyor:
                 if self.target is not None:
                     # self.inventory_manager.transfer_item(self.items, self.target.machine.input_inventory, item.item_type, 1, game_time)
                     # use collect_item instead of transfer_item because they are two different types of inventory
-                    self.inventory_manager.collect_item(self.target.machine.input_inventory, item.item_type, game_time)
+                    self.inventory_manager.collect_item(self.target.inventory, item.item_type)
                     removed_items.append(item)
                 else:
                     self.moving = False
@@ -46,11 +46,11 @@ class Conveyor:
         for item in removed_items:
             self.items.remove(item)
         
-        for item in self.input.machine.output_inventory:
-            if self.input.machine.output_inventory[item] == 0:
+        for item in self.input.inventory:
+            if self.input.inventory[item] == 0:
                 continue
             self.items.append(BeltItem(item))
-            self.input.machine.output_inventory[item] -= 1
+            self.input.inventory[item] -= 1
     
     def draw_items(self, surface: pg.Surface):
         for item in self.items:
