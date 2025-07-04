@@ -3,3 +3,4 @@ TODO
 - [ ] start to add some more machines & recipe trees
 - [ ] make MachineType asset_info actually useful
 - [ ] fix rendering of machine textures
+- [ ] output node with multiple conveyor connections should round robin by default (connected input nodes can have priorities later)
