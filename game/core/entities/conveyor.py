@@ -1,6 +1,6 @@
 import math
-from module.node import IONode
-from module.inventory import InventoryManager
+from core.entities.node import IONode
+from core.systems.inventory import InventoryManager
 import pygame as pg
 
 class Conveyor:

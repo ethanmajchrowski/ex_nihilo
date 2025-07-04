@@ -1,7 +1,6 @@
 from collections import defaultdict
-import module.node as Node
+import core.entities.node as Node
 from pygame import rect
-
 
 from typing import Callable, TYPE_CHECKING
 # if TYPE_CHECKING:
@@ -14,7 +13,7 @@ class Recipe:
         self.duration = duration
 
 class MachineType:
-    def __init__(self, name: str, recipes: list[Recipe], nodes: list[tuple[str, tuple[float, float], str]],
+    def __init__(self, name: str, recipes: list[Recipe], nodes: list[tuple[str, tuple[float, float], Node.NodeType]],
                  asset_info: dict, custom_update: None | Callable = None):
         self.name = name
         self.recipes = recipes  # None for machines like Importer
@@ -51,8 +50,8 @@ class Machine:
             return
         
         # collect items from nodes
-        input_nodes = [n for n in self.nodes if n.kind == "input" and n.node_type == Node.NodeTypes.ITEM]
-        output_nodes = [n for n in self.nodes if n.kind == "output" and n.node_type == Node.NodeTypes.ITEM]
+        input_nodes = [n for n in self.nodes if n.kind == "input" and n.node_type == Node.NodeType.ITEM]
+        output_nodes = [n for n in self.nodes if n.kind == "output" and n.node_type == Node.NodeType.ITEM]
 
         # congregate items from all nodes (don't care which node has which item for now
         combined_inputs = defaultdict(int)

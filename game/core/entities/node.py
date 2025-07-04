@@ -1,13 +1,18 @@
 from collections import defaultdict
-from module.machine import Machine
+from enum import Enum
+from typing import TYPE_CHECKING
 
-class NodeTypes:
+if TYPE_CHECKING:
+    from core.entities.machine import Machine
+    
+
+class NodeType(Enum):
     ITEM = "item"
     FLUID = "fluid"
     ENERGY = "energy"
 
 class IONode:
-    def __init__(self, machine: Machine, kind: str, offset: tuple, node_type: str = NodeTypes.ITEM, 
+    def __init__(self, machine: "Machine", kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
                  capacity: int = 16, transfer_interval = 0.1):
         """
         Create an input/output node for use in anything that uses or produces items.
@@ -16,7 +21,7 @@ class IONode:
             machine: any Machine with a valid MachineType
             kind: "input" or "output"
             offset: x, y values from 0 - 1 that offset the node as a multiplication of the machine's position
-            node_type: str (from NodeTypes) representing the type of node (Item, fluid, energy, etc.)
+            node_type: str (from NodeType) representing the type of node (Item, fluid, energy, etc.)
             capacity: net capacity of items in the node's inventory
             transfer_interval: time between inventory transfers in seconds
         

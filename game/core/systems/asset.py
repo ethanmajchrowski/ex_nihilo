@@ -1,6 +1,6 @@
 import pygame as pg
 from types import SimpleNamespace
-from settings import TILE_SIZE
+import config.configuration as c
 import time
 
 ASSETS = SimpleNamespace()
@@ -13,7 +13,7 @@ def load_assets():
 
     ASSETS.ui = SimpleNamespace()
 
-def load_image(path: str, size: None | tuple[int, int] = (TILE_SIZE, TILE_SIZE)) -> pg.Surface:
+def load_image(path: str, size: None | tuple[int, int] = c.BASE_MACHINE_SIZE) -> pg.Surface:
     """
     Load image, resizing to size if size is not None.
     """
@@ -27,7 +27,7 @@ def load_image(path: str, size: None | tuple[int, int] = (TILE_SIZE, TILE_SIZE))
         print(f"Loaded asset {path}! ({round(time.perf_counter()-start_time, 5)}ms)")
         return img
 
-def load_animation(path: str, num_frames: int, file_type: str = "png", frame_size: None | tuple[int, int] = (TILE_SIZE, TILE_SIZE)) -> list[pg.Surface]:
+def load_animation(path: str, num_frames: int, file_type: str = "png", frame_size: None | tuple[int, int] = c.BASE_MACHINE_SIZE) -> list[pg.Surface]:
     """
     Path should be to but not including the images.
         ex. "C:/Workspace/Projects/blender/renders/automation_game/grinder/"

@@ -4,27 +4,26 @@ from math import dist
 from types import SimpleNamespace
 
 # === Project modules === #
-from module.inventory import InventoryManager
-from module.machine import Machine
-from module.asset import ASSETS, load_assets
-from module.conveyor import Conveyor, BeltItem
-from module.node import IONode
-from module.machine_types import ROCK_CRUSHER, IMPORTER
+from core.systems.inventory import InventoryManager
+from core.systems.asset import ASSETS, load_assets
+from core.entities.machine import Machine
+from core.entities.conveyor import Conveyor, BeltItem
+from core.entities.node import IONode
+from core.entities.machines.machine_types import ROCK_CRUSHER, IMPORTER
 
-import module.node
-import settings
+import config.configuration as c
 
 # === Pygame Setup === #
 pg.init()
-display_surface = pg.display.set_mode(settings.display_surface_SIZE)
+display_surface = pg.display.set_mode(c.display_surface_SIZE)
 clock = pg.time.Clock()
 load_assets()
 
 # === Data & State ===
-font = pg.font.Font(r"asset\font\inter24.ttf", 18)
+font = pg.font.Font(r"assets\font\inter24.ttf", 18)
 
 # Clickable ground
-ground_rect = pg.Rect(settings.display_surface_WIDTH // 2 - 50, settings.display_surface_HEIGHT // 2 - 50, 100, 100)
+ground_rect = pg.Rect(c.display_surface_WIDTH // 2 - 50, c.display_surface_HEIGHT // 2 - 50, 100, 100)
 
 # Running time for notifications, etc.
 game_state = SimpleNamespace(game_time=0.0)
@@ -79,12 +78,12 @@ def draw_collection_overlay(surface):
 
     # Background box
     total_height = len(rendered) * item_height
-    box_rect = pg.Rect(0, settings.display_surface_HEIGHT - total_height, max_width + 15, total_height)
+    box_rect = pg.Rect(0, c.display_surface_HEIGHT - total_height, max_width + 15, total_height)
     pg.draw.rect(surface, (100, 100, 100), box_rect)
 
     # Draw text
     for i, surf in enumerate(rendered):
-        y = settings.display_surface_HEIGHT - (i + 1) * item_height
+        y = c.display_surface_HEIGHT - (i + 1) * item_height
         surface.blit(surf, (5, y))
 
 # === Main Loop ===
@@ -132,7 +131,7 @@ while running:
                     inventory_manager.collect_item(inventory_manager.global_inventory, "stone", -1)
             elif hovering_obj is not None:
                 selected_obj = hovering_obj
-                if isinstance(selected_obj, module.node.IONode):
+                if isinstance(selected_obj, IONode):
                     if keys[pg.K_g] and selected_obj.kind == "output": # if placing conveyor and hovering over output node
                         conveyor_start = selected_obj
                         print('started conveyor')

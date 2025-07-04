@@ -1,5 +1,5 @@
 from collections import defaultdict, namedtuple
-from module.node import IONode
+from core.entities.node import IONode
 
 class InventoryManager:
     CollectionEvent = namedtuple("CollectionEvent", "item new_total delta timestamp")
