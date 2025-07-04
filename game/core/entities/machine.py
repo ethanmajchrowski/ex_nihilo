@@ -98,6 +98,8 @@ class Machine:
                         take = min(node.inventory[item], remaining)
                         node.inventory[item] -= take
                         remaining -= take
+                        if node.inventory[item] == 0:
+                            del(node.inventory[item])
                         if remaining == 0:
                             break
                 

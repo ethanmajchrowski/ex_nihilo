@@ -66,6 +66,7 @@ class Game:
         """Run main game loop."""
         #! temporary ####################
         collection_timer = 0.0
+        self.inventory_manager.collect_item(self.inventory_manager.global_inventory, "stone", 5)
         #! temporary ####################
         
         while self.running:
@@ -73,11 +74,10 @@ class Game:
             mouse_pos = pg.mouse.get_pos()
             
             #! temporary ####################
-            collection_timer += dt
-            print(collection_timer)
-            if collection_timer >= 1.0:
-                collection_timer = 0.0
-                self.inventory_manager.collect_item(self.inventory_manager.global_inventory, "stone")
+            # collection_timer += dt
+            # if collection_timer >= 1.0:
+            #     collection_timer = 0.0
+            #     self.inventory_manager.collect_item(self.inventory_manager.global_inventory, "stone")
             #! temporary ####################
             
             self.handle_events()

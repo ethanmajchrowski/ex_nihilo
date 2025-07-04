@@ -20,6 +20,9 @@ stream_handler = colorlog.StreamHandler()
 stream_handler.setFormatter(color_formatter)
 
 # Plain file output
+with open("game.log", "w") as f:
+    f.close()
+
 file_handler = logging.FileHandler("game.log")
 file_formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
 file_handler.setFormatter(file_formatter)

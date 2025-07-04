@@ -49,7 +49,7 @@ class Renderer:
                mouse_pos: tuple[int, int], asset_manager: AssetManager,
                inventory_manager: InventoryManager) -> None:
         surface.fill((30, 30, 30))
-        pg.draw.rect(surface, (60, 60, 60), self.ground_rect)
+        # pg.draw.rect(surface, (60, 60, 60), self.ground_rect)
 
         for obj in state.world_objects:
             if isinstance(obj, Machine):

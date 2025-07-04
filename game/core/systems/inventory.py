@@ -1,5 +1,6 @@
 from collections import defaultdict, namedtuple
 from core.entities.node import IONode
+from logger import logger
 
 class InventoryManager:
     CollectionEvent = namedtuple("CollectionEvent", "item new_total delta timestamp")
@@ -10,6 +11,10 @@ class InventoryManager:
         
     def collect_item(self, inventory, item: str, amount: int = 1, time: int = 0):
         inventory[item] += amount
+        print(inventory[item] == 0)
+        if inventory[item] == 0:
+            del(inventory[item])
+            logger.info(f"Cleared empty key ({item}) from inventory")
 
         # Rest of code is responsible for the collection log in the bottom left.
         if inventory != self.global_inventory:
