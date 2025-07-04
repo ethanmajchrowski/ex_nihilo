@@ -27,14 +27,14 @@ class Conveyor:
         self.moving = True
         self.inventory_manager = inventory_manager
     
-    def update(self, dt, game_time):
+    def update(self, dt):
         removed_items = []
         for item in self.items:
             if self.moving:
                 item.distance += self.speed * dt
             
             if item.distance >= self.length:
-                # TODO add checks for full inventory and stop conveyor if so
+                # TODO add checks for full target inventory and stop conveyor if so
                 if self.target is not None:
                     # self.inventory_manager.transfer_item(self.items, self.target.machine.input_inventory, item.item_type, 1, game_time)
                     # use collect_item instead of transfer_item because they are two different types of inventory

@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.entities.machine import Machine
     
-
 class NodeType(Enum):
     ITEM = "item"
     FLUID = "fluid"
@@ -75,3 +74,9 @@ class IONode:
         """
         total = sum(self.inventory.values())
         return total + amount < self.capacity
+
+    def has_item(self, item: str) -> int:
+        """
+        Gets quantity of contained item within this node.
+        """
+        return self.inventory[item]

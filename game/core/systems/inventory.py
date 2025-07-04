@@ -3,14 +3,12 @@ from core.entities.node import IONode
 
 class InventoryManager:
     CollectionEvent = namedtuple("CollectionEvent", "item new_total delta timestamp")
-    def __init__(self, game_state):
+    def __init__(self):
         self.global_inventory = defaultdict(int)
         # Collection notifications
         self.collection_log: list[InventoryManager.CollectionEvent] = []
-
-        self.game_state = game_state
-
-    def collect_item(self, inventory, item: str, amount: int = 1):
+        
+    def collect_item(self, inventory, item: str, amount: int = 1, time: int = 0):
         inventory[item] += amount
 
         # Rest of code is responsible for the collection log in the bottom left.
@@ -21,10 +19,10 @@ class InventoryManager:
         # (collection_log[-1].delta * amount > 0) checks because (positive * positive = positive) and (negative * negative = positive)
         if (self.collection_log) and (self.collection_log[-1].item == item) and (self.collection_log[-1].delta * amount > 0):
             last = self.collection_log.pop()
-            new_event = InventoryManager.CollectionEvent(item, inventory[item], last.delta + amount, round(self.game_state.game_time))
+            new_event = InventoryManager.CollectionEvent(item, inventory[item], last.delta + amount, round(time))
             self.collection_log.append(new_event)
         else:
-            self.collection_log.append(InventoryManager.CollectionEvent(item, inventory[item], amount, round(self.game_state.game_time)))
+            self.collection_log.append(InventoryManager.CollectionEvent(item, inventory[item], amount, round(time)))
 
     def transfer_item(self, inventory1, inventory2, item: str, amount: int):
         """
