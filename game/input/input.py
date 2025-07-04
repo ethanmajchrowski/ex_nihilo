@@ -80,4 +80,4 @@ class InputManager:
                         )
                     )
             
-            conveyor_start = None
+            self.game.state.conveyor_start = None

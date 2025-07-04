@@ -13,7 +13,7 @@ from core.systems.inventory import InventoryManager
 from core.entities.node import IONode
 from core.entities.conveyor import Conveyor
 from core.entities.machine import Machine
-from core.entities.machines.machine_types import ROCK_CRUSHER, IMPORTER
+from core.entities.machines.machine_types import ROCK_CRUSHER, IMPORTER, MINESHAFT
 
 class GameState:
     """Contains dynamic data for game."""
@@ -43,6 +43,7 @@ class Game:
         
         self.add_world_object(Machine((200, 200), ROCK_CRUSHER))
         self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager]))
+        self.add_world_object(Machine((800, 200), MINESHAFT))
 
     def handle_events(self) -> None:
         """Process all game events (input, quit, etc.)."""

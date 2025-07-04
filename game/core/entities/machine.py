@@ -13,8 +13,13 @@ class Recipe:
         self.duration = duration
 
 class MachineType:
-    def __init__(self, name: str, recipes: list[Recipe], nodes: list[tuple[str, tuple[float, float], Node.NodeType]],
+    def __init__(self, name: str, recipes: list[Recipe], 
+                 nodes: list[tuple[str, tuple[float, float], Node.NodeType, int, float]],
                  asset_info: dict, custom_update: None | Callable = None):
+        """
+        nodes [(kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
+                 capacity: int = 16, transfer_interval = 0.1), ...]
+        """
         self.name = name
         self.recipes = recipes  # None for machines like Importer
         self.nodes = nodes    # [("input", (-0.9, 0)), ("output", (0.9, 0))]
@@ -30,7 +35,8 @@ class Machine:
         self.rect = rect.Rect(0, 0, 48, 48)
         self.rect.center = pos
 
-        self.nodes = [Node.IONode(self, kind, offset, node_type) for kind, offset, node_type in mtype.nodes]
+        self.nodes = [Node.IONode(self, kind, offset, node_type, capacity, transfer_interval) 
+                      for kind, offset, node_type, capacity, transfer_interval in mtype.nodes]
         self.progress = 0
         self.selected_recipe_index = 0
 

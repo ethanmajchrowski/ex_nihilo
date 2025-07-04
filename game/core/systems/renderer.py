@@ -1,6 +1,7 @@
 # renderer.py
 import pygame as pg
 from core.entities.machine import Machine
+from core.entities.conveyor import Conveyor
 from core.entities.node import IONode
 import config.configuration as c
 from core.systems.asset import AssetManager
@@ -54,7 +55,9 @@ class Renderer:
         for obj in state.world_objects:
             if isinstance(obj, Machine):
                 self.draw_machine(surface, obj)
-            # You can add other entity types here if needed
+            if isinstance(obj, Conveyor):
+                pg.draw.line(surface, (255, 255, 255), obj.start, obj.end, 5)
+                obj.draw_items(surface)
 
         if state.conveyor_start is not None:
             pg.draw.line(surface, (255, 255, 255), state.conveyor_start.abs_pos, mouse_pos, 5)
