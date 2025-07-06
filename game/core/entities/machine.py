@@ -28,7 +28,8 @@ class MachineType:
         self.supports_rotation = supports_rotation
 
 class Machine:
-    def __init__(self, pos, mtype: MachineType, contexts: list | None = None) -> None:
+    def __init__(self, pos, mtype: MachineType, contexts: list | None = None,
+                 rotation = 0) -> None:
         self.pos = pos
         self.type = mtype.name
         self.mtype = mtype
@@ -52,6 +53,9 @@ class Machine:
         self.contexts = contexts
     
     def update(self, dt):
+        for node in self.nodes:
+            node.update(dt)
+        
         if self.mtype.custom_update:
             self.mtype.custom_update(self, dt)
             return
@@ -137,3 +141,7 @@ class Machine:
                         print(f"[WARNING] Output overflow during execution of {self.type}: {item} x{remaining}")
 
                 print(f"{self.type} finished recipe ({recipe.inputs} -> {recipe.outputs}) ({recipe.duration}s)")
+    
+    @property
+    def __name__(self):
+        return self.mtype.name

@@ -49,7 +49,7 @@ class InputManager:
             
             # Rock Crusher IONodes
             # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
-            elif selected_obj.machine.mtype.name == "RockCrusher":
+            elif hasattr(selected_obj.host, "mtype") and selected_obj.host.mtype.name == "RockCrusher":
                 if selected_obj.kind == "input":
                     if event.button == 1:
                         self.game.inventory_manager.transfer_item(

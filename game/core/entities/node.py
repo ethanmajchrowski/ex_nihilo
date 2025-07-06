@@ -1,9 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from core.entities.machine import Machine
+from logger import logger
     
 class NodeType(Enum):
     ITEM = "item"
@@ -11,8 +8,8 @@ class NodeType(Enum):
     ENERGY = "energy"
 
 class IONode:
-    def __init__(self, machine: "Machine", kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
-                 capacity: int = 16, transfer_interval = 0.1):
+    def __init__(self, host, kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
+                 capacity: int = 16, transfer_interval = 0.1, abs_pos: tuple[int, int] = (0, 0)):
         """
         Create an input/output node for use in anything that uses or produces items.
 
@@ -23,18 +20,26 @@ class IONode:
             node_type: str (from NodeType) representing the type of node (Item, fluid, energy, etc.)
             capacity: net capacity of items in the node's inventory
             transfer_interval: time between inventory transfers in seconds
+            abs_pos: Overrides abs_pos to a coordinate rather than be tied to a machine/offset.
         
         Output nodes push 1 item from their inventory to all connected input 
         nodes of the same type every transfer_interval seconds
         """
-        self.machine = machine
+        self.host = host
         self.kind = kind
         self.node_type = node_type
         self.offset = offset
-        self.abs_pos = (self.machine.pos[0] + self.machine.rect.w * self.offset[0] / 2, 
-                        self.machine.pos[1] + self.machine.rect.h * self.offset[1] / 2)
+        if hasattr(self.host, "pos") and hasattr(self.host, "rect"):
+            self.abs_pos = (self.host.pos[0] + self.host.rect.w * self.offset[0] / 2, 
+                            self.host.pos[1] + self.host.rect.h * self.offset[1] / 2)
+        else:
+            self.abs_pos = abs_pos
+            if self.abs_pos == (0, 0):
+                logger.warning("Node has abs_pos (0, 0) (default without machine). Is this intentional?")
+        
         self.capacity = capacity
         self.connected_nodes: list[IONode] = []
+        self.output_node_index = 0
 
         self.transfer_timer = 0.0
         self.transfer_interval = transfer_interval
@@ -50,30 +55,35 @@ class IONode:
         if self.transfer_timer >= self.transfer_interval:
             self.transfer_timer = 0.0
 
-            for other in self.connected_nodes:
-                if other.kind != "input" or other.node_type != self.node_type:
+            other = self.connected_nodes[self.output_node_index]
+
+            if other.kind != "input" or other.node_type != self.node_type:
+                return
+
+            for item, count in self.inventory.items():
+                # print(item)
+                if count <= 0:
                     continue
 
-                for item, count in self.inventory.items():
-                    if count <= 0:
-                        continue
-
-                    total = sum(other.inventory.values())
-                    if total >= other.capacity:
-                        continue
-
-                    # transfer one unit
-                    other.inventory[item] += 1
-                    self.inventory[item] -= 1
-                    print(f"transferred 1 {item} from {self.machine.mtype.name} output to {other.machine.mtype.name} input")
-                    return  # do only one transfer per interval
+                if not other.can_accept(1):
+                    print('other node cant take', other.inventory)
+                    continue
+                
+                # transfer one unit
+                other.inventory[item] += 1
+                self.inventory[item] -= 1
+                logger.info(f"transferred 1 {item} from {self.host.__name__} output to {other.host.__name__} input")
+                self.output_node_index += 1
+                if self.output_node_index > len(self.connected_nodes)-1:
+                    self.output_node_index = 0
+                return  # do only one transfer per interval
 
     def can_accept(self, amount: int) -> bool:
         """
         Check if this node can accept the transfer of amount items.
         """
         total = sum(self.inventory.values())
-        return total + amount < self.capacity
+        return total + amount <= self.capacity
 
     def has_item(self, item: str) -> int:
         """

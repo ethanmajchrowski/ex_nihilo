@@ -56,7 +56,7 @@ class Renderer:
             if isinstance(obj, Machine):
                 self.draw_machine(surface, obj)
             if isinstance(obj, Conveyor):
-                pg.draw.line(surface, (255, 255, 255), obj.start, obj.end, 5)
+                pg.draw.line(surface, (255, 255, 255), obj.start_pos, obj.end_pos, 5)
                 obj.draw_items(surface)
 
         if state.conveyor_start is not None:

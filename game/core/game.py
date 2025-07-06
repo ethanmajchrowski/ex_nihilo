@@ -49,7 +49,14 @@ class Game:
         
         self.add_world_object(Machine((200, 200), ROCK_CRUSHER))
         self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager]))
+        self.add_world_object(Machine((500, 450), IMPORTER, [self.inventory_manager]))
         self.add_world_object(Machine((800, 200), MINESHAFT))
+        self.add_world_object(Machine((800, 250), MINESHAFT))
+        
+        self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[1].nodes[0], inventory_manager))
+        self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[2].nodes[0], inventory_manager))
+        self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
+        self.add_world_object(Conveyor(self.state.world_objects[4].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
 
     def handle_events(self) -> None:
         """Process all game events (input, quit, etc.)."""
