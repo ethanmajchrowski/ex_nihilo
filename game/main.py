@@ -26,6 +26,11 @@ def load_assets() -> AssetManager:
     # asset_manager.add_asset("machines", "Importer", asset_manager.load_animation(r"C:\Workspace\Projects\blender\renders\automation_game\importer\\", 60))
     asset_manager.add_asset("machines", "Importer", asset_manager.load_animation(r"C:\Workspace\Projects\blender\renders\automation_game\importer\\", 1))
 
+    # Load items
+    asset_manager.register_group("items")
+    asset_manager.add_asset("items", "stone", asset_manager.load_image(r"assets\graphics\item\stone.png", (16, 16)))
+    asset_manager.add_asset("items", "gravel", asset_manager.load_image(r"assets\graphics\item\gravel.png", (16, 16)))
+
     # Load fonts
     asset_manager.register_group("fonts")
     asset_manager.add_asset("fonts", "inter", asset_manager.load_font(r"assets\font\inter24.ttf", 24))

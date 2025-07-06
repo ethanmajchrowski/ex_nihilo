@@ -44,3 +44,6 @@ class AssetManager:
         logger.debug(f"Loading font {path}")
         # print(f"Loading {path}")
         return pg.font.Font(path, size)
+
+    def is_asset(self, group: str, name: str) -> bool:
+        return group in self.assets.keys() and name in self.assets[group].keys()

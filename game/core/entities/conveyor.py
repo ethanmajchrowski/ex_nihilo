@@ -70,11 +70,13 @@ class Conveyor:
                 self.items.append(BeltItem(item))
                 self.input_node.inventory[item] -= 1
     
-    def draw_items(self, surface: pg.Surface):
+    def get_item_info(self) -> list[tuple[str, int, int]]:
+        output_list: list[tuple[str, int, int]] = []
         for item in self.items:
             pos_x = int(self.start_pos[0] + self.direction[0] * item.distance)
             pos_y = int(self.start_pos[1] + self.direction[1] * item.distance)
-            pg.draw.circle(surface, (255, 0, 0), (pos_x, pos_y), 5)
+            output_list.append((item.item_type, pos_x, pos_y))
+        return output_list
     
     @property
     def __name__(self): 

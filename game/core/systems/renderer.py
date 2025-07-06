@@ -19,11 +19,6 @@ class Renderer:
     def draw_machine(self, surface: pg.Surface, machine: Machine) -> None:
         pg.draw.rect(surface, (255, 255, 255), machine.rect)
 
-        if machine.nodes:
-            for node in machine.nodes:
-                color = (0, 0, 255) if node.kind == "input" else (255, 153, 0)
-                pg.draw.circle(surface, color, node.abs_pos, 5)
-
     # def draw_collection_overlay(self, surface: pg.Surface) -> None:
     #     max_items = 5
     #     item_height = 20
@@ -56,12 +51,27 @@ class Renderer:
             if isinstance(obj, Machine):
                 self.draw_machine(surface, obj)
             if isinstance(obj, Conveyor):
-                pg.draw.line(surface, (255, 255, 255), obj.start_pos, obj.end_pos, 5)
-                obj.draw_items(surface)
+                pg.draw.aaline(surface, (255, 255, 255), obj.start_pos, obj.end_pos, 5)
+                for item, x, y in obj.get_item_info():
+                    if asset_manager.is_asset("items", item):
+                        item_surf = asset_manager.assets["items"][item]
+                        item_rect = item_surf.get_rect(center=(x, y))
+                        surface.blit(item_surf, item_rect)
+                        # pg.draw.circle(surface, (255, 0, 0), (x, y), 2)
+                    else:
+                        pg.draw.circle(surface, (255, 0, 0), (x, y), 2)
 
         if state.conveyor_start is not None:
             pg.draw.line(surface, (255, 255, 255), state.conveyor_start.abs_pos, mouse_pos, 5)
 
+        # draw nodes
+        for obj in state.world_objects:
+            if isinstance(obj, Machine):
+                if obj.nodes:
+                    for node in obj.nodes:
+                        color = (0, 0, 255) if node.kind == "input" else (255, 153, 0)
+                        pg.draw.circle(surface, color, node.abs_pos, 5)
+        
         # Draw inventory counts
         stone_text = asset_manager.assets["fonts"]["inter"].render(
             f"Stone: {inventory_manager.global_inventory['stone']}", True, (255, 255, 255))

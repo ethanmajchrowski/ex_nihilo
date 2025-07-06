@@ -110,7 +110,7 @@ class Game:
             self.handle_events()
             self.update(dt)
             self.render(mouse_pos)
-            
+                        
             pg.display.update()
     
     def add_world_object(self, new_object):
