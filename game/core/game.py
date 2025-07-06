@@ -58,6 +58,8 @@ class Game:
         self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
         self.add_world_object(Conveyor(self.state.world_objects[4].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
 
+        self.fps_update_time = 0.0
+
     def handle_events(self) -> None:
         """Process all game events (input, quit, etc.)."""
         events = pg.event.get()
@@ -68,7 +70,11 @@ class Game:
 
     def update(self, dt: float) -> None:
         """Update game state."""
-        pg.display.set_caption(f"FPS: {round(self.clock.get_fps())}")
+        if self.fps_update_time < 0.25:
+            self.fps_update_time += dt
+        else:
+            pg.display.set_caption(f"FPS: {round(self.clock.get_fps())}")
+            self.fps_update_time = 0.0
         for obj in self.state.world_objects:
             # Check for special update methods
             # if isinstance(obj, Machine):
