@@ -5,7 +5,7 @@ TODO
 - [ ] fix rendering of machine textures
 - [ ] output node with multiple conveyor connections should round robin by default (connected input nodes can have priorities later)
 - [ ] UI systems
-  - [ ] basics
+  - [x] basics
   - [ ] machine placement
   - [ ] inventory view
   - [ ] recipe browser (JEI-adjacent)

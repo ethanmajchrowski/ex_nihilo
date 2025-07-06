@@ -1,0 +1,15 @@
+{
+    "panel": {
+        "misc": {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "6",
+            "border_width": "1"
+        }
+    },
+    "button": {
+        "misc": {
+            "shape": "rounded_rectangle",
+            "tool_tip_delay": 0.0
+        }
+    }
+}

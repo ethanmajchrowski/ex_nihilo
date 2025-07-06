@@ -23,6 +23,7 @@ class GameState:
         self.hovering_obj: Any = None
         self.selected_obj = None
         self.conveyor_start: IONode | None = None
+        self.running = True
 
 class Game:
     """Master class responsible for all game control"""
@@ -34,15 +35,17 @@ class Game:
         self.clock = clock
         self.display = display
         self.state = state
+        
+        # System managers
         self.asset_manager = asset_manager
         self.renderer = renderer
         self.inventory_manager = inventory_manager
         self.ui_manager = ui_manager
-
         self.input_manager = input_manager
+
+        # System manager linking to self
         self.input_manager.game = self
-        
-        self.running = True
+        self.ui_manager.game = self
         
         self.add_world_object(Machine((200, 200), ROCK_CRUSHER))
         self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager]))
@@ -80,7 +83,7 @@ class Game:
         self.inventory_manager.collect_item(self.inventory_manager.global_inventory, "stone", 5)
         #! temporary ####################
         
-        while self.running:
+        while self.state.running:
             dt = self.clock.tick() / 1000
             mouse_pos = pg.mouse.get_pos()
             
