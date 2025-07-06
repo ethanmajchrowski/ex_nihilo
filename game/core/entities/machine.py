@@ -15,7 +15,7 @@ class Recipe:
 class MachineType:
     def __init__(self, name: str, recipes: list[Recipe], 
                  nodes: list[tuple[str, tuple[float, float], Node.NodeType, int, float]],
-                 asset_info: dict, custom_update: None | Callable = None):
+                 asset_info: dict, custom_update: None | Callable = None, supports_rotation = True):
         """
         nodes [(kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
                  capacity: int = 16, transfer_interval = 0.1), ...]
@@ -25,6 +25,7 @@ class MachineType:
         self.nodes = nodes    # [("input", (-0.9, 0)), ("output", (0.9, 0))]
         self.asset_info = asset_info  # {"image": "asset/machine/rock_crusher.png", "frames": 1}
         self.custom_update = custom_update  # Optional function for specialized behavior
+        self.supports_rotation = supports_rotation
 
 class Machine:
     def __init__(self, pos, mtype: MachineType, contexts: list | None = None) -> None:
@@ -37,6 +38,11 @@ class Machine:
 
         self.nodes = [Node.IONode(self, kind, offset, node_type, capacity, transfer_interval) 
                       for kind, offset, node_type, capacity, transfer_interval in mtype.nodes]
+        if self.mtype.supports_rotation:
+            for node in self.nodes:
+                for _ in range(rotation % 4): # 90* rotations
+                    node.offset = (node.offset[1], node.offset[0]*-1)
+                
         self.progress = 0
         self.selected_recipe_index = 0
 
