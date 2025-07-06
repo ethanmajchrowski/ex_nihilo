@@ -15,13 +15,11 @@ class InputManager:
     def __init__(self):
         self.game: "Game"
 
-    def process_events(self, events):
-        keys = pg.key.get_pressed()
-        for event in events:
-            if event.type == pg.MOUSEBUTTONDOWN:    self.handle_mouse_button_down(event, keys)
-            if event.type == pg.MOUSEMOTION:        self.handle_mouse_motion(event)
-            if event.type == pg.QUIT:               self.game.running = False
-            if event.type == pg.MOUSEBUTTONUP:      self.handle_mouse_button_up(event)
+    def process_event(self, event, keys):
+        if event.type == pg.MOUSEBUTTONDOWN:    self.handle_mouse_button_down(event, keys)
+        if event.type == pg.MOUSEMOTION:        self.handle_mouse_motion(event)
+        if event.type == pg.QUIT:               self.game.running = False
+        if event.type == pg.MOUSEBUTTONUP:      self.handle_mouse_button_up(event)
 
     def handle_mouse_motion(self, event):
         hovering_obj = None

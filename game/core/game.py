@@ -7,8 +7,9 @@ import config.configuration as c
 
 from core.systems.asset import AssetManager
 from core.systems.renderer import Renderer
-from input.input import InputManager
+from core.systems.input import InputManager
 from core.systems.inventory import InventoryManager
+from core.systems.ui import UIManager
 
 from core.entities.node import IONode
 from core.entities.conveyor import Conveyor
@@ -27,7 +28,8 @@ class Game:
     """Master class responsible for all game control"""
 
     def __init__(self, display: pg.Surface, state: GameState, clock: pg.Clock, asset_manager: AssetManager,
-                 renderer: Renderer, input_manager: InputManager, inventory_manager: InventoryManager) -> None:
+                 renderer: Renderer, input_manager: InputManager, inventory_manager: InventoryManager,
+                 ui_manager: UIManager) -> None:
         """Initialize the game controller and all subsystems."""
         self.clock = clock
         self.display = display
@@ -35,6 +37,7 @@ class Game:
         self.asset_manager = asset_manager
         self.renderer = renderer
         self.inventory_manager = inventory_manager
+        self.ui_manager = ui_manager
 
         self.input_manager = input_manager
         self.input_manager.game = self
@@ -47,7 +50,11 @@ class Game:
 
     def handle_events(self) -> None:
         """Process all game events (input, quit, etc.)."""
-        self.input_manager.process_events(pg.event.get())
+        events = pg.event.get()
+        keys = pg.key.get_pressed()
+        for event in events:
+            self.input_manager.process_event(event, keys)
+            self.ui_manager.process_event(event)
 
     def update(self, dt: float) -> None:
         """Update game state."""
@@ -58,10 +65,13 @@ class Game:
             #     obj.update(dt, other_args)
             # Update everything else
             obj.update(dt)
+        
+        self.ui_manager.update_ui(dt)
 
     def render(self, mouse_pos) -> None:
         """Draw everything to the screen."""
         self.renderer.render(self.display, self.state, mouse_pos, self.asset_manager, self.inventory_manager)
+        self.ui_manager.render_ui(self.display)
 
     def run(self) -> None:
         """Run main game loop."""

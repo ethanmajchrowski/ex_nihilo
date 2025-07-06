@@ -1,9 +1,11 @@
 # Project modules
 from core.game import Game, GameState
+
 from core.systems.asset import AssetManager
 from core.systems.renderer import Renderer
-from input.input import InputManager
+from core.systems.input import InputManager
 from core.systems.inventory import InventoryManager
+from core.systems.ui import UIManager
 
 from logger import logger
 
@@ -44,9 +46,10 @@ def main():
     asset_manager = load_assets()
     renderer = Renderer()
     input_manager = InputManager()
+    ui_manager = UIManager(display_surface.get_size())
     
     # === Create & run Game === #
-    game = Game(display_surface, game_state, pg.Clock(), asset_manager, renderer, input_manager, inventory_manager)
+    game = Game(display_surface, game_state, pg.Clock(), asset_manager, renderer, input_manager, inventory_manager, ui_manager)
     logger.info("Game initialization complete, running!")
     game.run()
     
