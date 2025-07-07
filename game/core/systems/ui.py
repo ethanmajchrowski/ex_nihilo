@@ -1,6 +1,9 @@
 import pygame as pg
 import config.configuration as c
 
+from core.entities.machine import Machine
+from core.entities.node import IONode, NodeType
+
 from typing import TYPE_CHECKING, List
 if TYPE_CHECKING:
     from core.game import Game
@@ -213,6 +216,67 @@ class UIInventoryPanel(UIElement):
         label = self.font.render(text, True, (255, 255, 255))
         surface.blit(label, (rect.x + 40, rect.y + 10))
 
+class UIMachineTooltip(UIElement):
+    def __init__(self, game: "Game"):
+        super().__init__(pg.Rect(0, 0, 200, 120))  # will auto-position top-right
+        self.game = game
+        self.machine = None
+        self.font = pg.font.SysFont("Arial", 16)
+        self.visible = False
+
+    def handle_event(self, event):
+        if event.type == pg.MOUSEMOTION:
+            hovered = self.game.state.hovering_obj
+            self.visible = False
+            self.machine = None
+            if hovered:
+                for item in hovered:
+                    if isinstance(item, Machine):
+                        self.machine = item
+                        self.visible = True
+
+            # Update position top-right
+            sw, _ = self.game.display.get_size()
+            self.rect.topleft = (sw - self.rect.width - 10, 10)
+
+    def draw_self(self, surface):
+        if not self.visible or not self.machine:
+            return
+
+        pg.draw.rect(surface, (25, 25, 25), self.global_rect(), border_radius=5)
+        pg.draw.rect(surface, (80, 80, 80), self.global_rect(), 1, border_radius=5)
+        
+        recipe = self.machine.mtype.recipes[self.machine.selected_recipe_index]
+
+        recipe_text = ""
+        if recipe.inputs and recipe.outputs:
+            recipe_text = f"> Recipe: {recipe.inputs} -> {recipe.outputs} ({recipe.duration}s)"
+        elif recipe.inputs and not recipe.outputs:
+            recipe_text = f"> Collecting {recipe.inputs} ({recipe.duration}s)"
+        elif recipe.outputs and not recipe.inputs:
+            recipe_text = f"> Generating {recipe.outputs} ({recipe.duration}s)"
+        else:
+            recipe_text = f"> Misc recipe ({recipe.duration}s)"
+
+        input_nodes = {}
+        output_nodes = {}
+        for node in self.machine.nodes:
+            if node.kind == "input" and node.node_type == NodeType.ITEM:
+                input_nodes.update(node.inventory)
+            elif node.kind == "output" and node.node_type == NodeType.ITEM:
+                output_nodes.update(node.inventory)
+
+        lines = [
+            f"{self.machine.mtype.name}",
+            recipe_text,
+            f"> Progress: {int((self.machine.progress/recipe.duration) * 100)}%",
+            f"> I/O: {input_nodes} / {output_nodes}"
+        ]
+
+        for i, text in enumerate(lines):
+            txt_surf = self.font.render(text, True, (255, 255, 255))
+            surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 8 + i * 20))
+
 class UIManager:
     def __init__(self):
         self.game: "Game"
@@ -245,6 +309,9 @@ class UIManager:
         
         inv_panel = UIInventoryPanel(self.game)
         self.windows[0].add_child(inv_panel)
+        
+        self.tooltip = UIMachineTooltip(self.game)
+        self.elements.append(self.tooltip)
 
     def add(self, element):
         self.elements.append(element)

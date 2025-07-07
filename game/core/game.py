@@ -86,7 +86,7 @@ class Game:
         if self.fps_update_time < 0.25:
             self.fps_update_time += dt
         else:
-            pg.display.set_caption(f"FPS: {round(self.clock.get_fps())}")
+            pg.display.set_caption(f"EX NIHILO | FPS: {round(self.clock.get_fps())}")
             self.fps_update_time = 0.0
         for obj in self.state.world_objects:
             # Check for special update methods

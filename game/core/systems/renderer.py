@@ -124,17 +124,17 @@ class Renderer:
                         pg.draw.circle(surface, color, (node.abs_pos[0] + offset[0], node.abs_pos[1] + offset[1]), 5)
         
         # Draw inventory counts
-        hover_text = asset_manager.assets["fonts"]["inter_md"].render(
-            f"{len(state.hovering_obj)} {state.hovering_obj}", True, (255, 255, 255))
-        surface.blit(hover_text, (10, 50))
+        # hover_text = asset_manager.assets["fonts"]["inter_md"].render(
+        #     f"{len(state.hovering_obj)} {state.hovering_obj}", True, (255, 255, 255))
+        # surface.blit(hover_text, (10, 50))
 
         # Hovering IONode inventory display
-        if state.hovering_obj is not None and isinstance(state.hovering_obj, IONode):
-            contents_text = asset_manager.assets["fonts"]["inter"].render(
-                "\n".join(f"{k}: {v}" for k, v in state.hovering_obj.inventory.items()),
-                True, (255, 255, 255), (0, 0, 0)
-            )
-            surface.blit(contents_text, contents_text.get_rect(bottomleft=mouse_pos))
+        # if state.hovering_obj is not None and isinstance(state.hovering_obj, IONode):
+        #     contents_text = asset_manager.assets["fonts"]["inter"].render(
+        #         "\n".join(f"{k}: {v}" for k, v in state.hovering_obj.inventory.items()),
+        #         True, (255, 255, 255), (0, 0, 0)
+        #     )
+        #     surface.blit(contents_text, contents_text.get_rect(bottomleft=mouse_pos))
 
         # Draw collection log overlay (not for now)
         # if self.inventory_manager.collection_log:

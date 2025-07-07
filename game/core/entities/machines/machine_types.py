@@ -8,7 +8,7 @@ def node_template(kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM,
     return (kind, offset, node_type, capacity, transfer_interval)
 
 ROCK_CRUSHER = MachineType(
-    name="RockCrusher",
+    name="Rock Crusher",
     recipes=[Recipe({"stone": 1}, {"gravel": 1}, 0.5)],
     nodes=[
         node_template("input", (-0.9, 0), NodeType.ITEM),
