@@ -23,3 +23,4 @@ TODO
 KNOWN BUGS
 - [ ] conveyors don't all stop at the same time when one connected conveyor stops
 - [ ] figure out a way to remove the item buffering from conveyor IONodes
+- [ ] fix conveyor cutting to work with camera offset

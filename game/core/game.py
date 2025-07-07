@@ -34,7 +34,7 @@ class GameState:
         
         class tools:
             def __init__(self) -> None:
-                self.REMOVE_CONVEYORS: bool = True
+                self.REMOVE_CONVEYORS: bool = False
         
         self.tools = tools()
         
@@ -89,6 +89,7 @@ class Game:
             if keys[pg.K_w]: self.camera.move(0, -500*dt)
             if keys[pg.K_s]: self.camera.move(0, 500*dt)
             if keys[pg.K_h]: self.camera.set_pos(0, 0)
+        
         for event in events:
             self.input_manager.process_event(event, keys)
             self.ui_manager.handle_event(event)

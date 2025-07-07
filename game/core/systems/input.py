@@ -20,6 +20,12 @@ class InputManager:
         if event.type == pg.MOUSEMOTION:        self.handle_mouse_motion(event)
         if event.type == pg.QUIT:               self.game.state.running = False
         if event.type == pg.MOUSEBUTTONUP:      self.handle_mouse_button_up(event)
+        if event.type == pg.KEYDOWN:            self.handle_key_down(event)
+
+    def handle_key_down(self, event):
+        if event.key == pg.K_DELETE: 
+            self.game.state.tools.REMOVE_CONVEYORS = not self.game.state.tools.REMOVE_CONVEYORS
+            print("Removing conveyors" if self.game.state.tools.REMOVE_CONVEYORS else "No longer removing conveyors")
 
     def handle_mouse_motion(self, event):
         if not self.mouse_valid_pos(event.pos):

@@ -133,8 +133,8 @@ class Renderer:
             pg.draw.aaline(surface, (255, 0, 0), mouse_pos, state.removing_conveyors)
             for obj in state.world_objects:
                 if isinstance(obj, Conveyor):
-                    if lines_intersect(obj.start_pos, obj.end_pos, mouse_pos, state.removing_conveyors):
-                        pg.draw.aaline(surface, (255, 0, 100), obj.start_pos, obj.end_pos)
+                    if lines_intersect(obj.start_pos, obj.end_pos, camera.screen_to_world(mouse_pos), state.removing_conveyors):
+                        pg.draw.aaline(surface, (255, 0, 100), camera.world_to_screen(obj.start_pos), camera.world_to_screen(obj.end_pos))
     
         # Draw inventory counts
         # hover_text = asset_manager.assets["fonts"]["inter_md"].render(
