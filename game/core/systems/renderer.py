@@ -73,12 +73,9 @@ class Renderer:
                         pg.draw.circle(surface, color, node.abs_pos, 5)
         
         # Draw inventory counts
-        stone_text = asset_manager.assets["fonts"]["inter"].render(
-            f"Stone: {inventory_manager.global_inventory['stone']}", True, (255, 255, 255))
-        gravel_text = asset_manager.assets["fonts"]["inter"].render(
-            f"Gravel: {inventory_manager.global_inventory['gravel']}", True, (255, 255, 255))
-        surface.blit(stone_text, (10, 10))
-        surface.blit(gravel_text, (10, 10 + stone_text.get_height()))
+        hover_text = asset_manager.assets["fonts"]["inter"].render(
+            f"{state.hovering_obj}", True, (255, 255, 255))
+        surface.blit(hover_text, (10, 10))
 
         # Hovering IONode inventory display
         if state.hovering_obj is not None and isinstance(state.hovering_obj, IONode):

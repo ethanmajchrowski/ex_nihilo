@@ -47,6 +47,8 @@ class IONode:
         self.inventory = defaultdict(int)
     
     def update(self, dt):
+        if self.output_node_index > len(self.connected_nodes)-1:
+            self.output_node_index = 0
         # output nodes push their contents automatically into connected input nodes of the same type
         if self.kind != "output":
             return
@@ -55,6 +57,8 @@ class IONode:
         if self.transfer_timer >= self.transfer_interval:
             self.transfer_timer = 0.0
 
+            if not self.connected_nodes:
+                return
             other = self.connected_nodes[self.output_node_index]
 
             if other.kind != "input" or other.node_type != self.node_type:
@@ -67,6 +71,7 @@ class IONode:
 
                 if not other.can_accept(1):
                     print('other node cant take', other.inventory)
+                    self.output_node_index += 1
                     continue
                 
                 # transfer one unit
@@ -74,8 +79,6 @@ class IONode:
                 self.inventory[item] -= 1
                 logger.info(f"transferred 1 {item} from {self.host.__name__} output to {other.host.__name__} input")
                 self.output_node_index += 1
-                if self.output_node_index > len(self.connected_nodes)-1:
-                    self.output_node_index = 0
                 return  # do only one transfer per interval
 
     def can_accept(self, amount: int) -> bool:

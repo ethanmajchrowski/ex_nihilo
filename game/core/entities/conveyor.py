@@ -4,16 +4,21 @@ from core.systems.inventory import InventoryManager
 import pygame as pg
 
 class Conveyor:
-    def __init__(self, start_node: IONode, end_node: IONode, inventory_manager: InventoryManager, speed = 100, item_spacing = 15):
+    def __init__(self, start_node: IONode, end_node: IONode | tuple[int, int], 
+                 inventory_manager: InventoryManager, speed = 100, item_spacing = 15):
         self.start_pos = start_node.abs_pos  # (x, y)
-        self.end_pos = end_node.abs_pos      # (x, y)
+        if isinstance(end_node, IONode):
+            self.end_pos = end_node.abs_pos      # (x, y)
+        else:
+            self.end_pos = end_node
         
         self.speed = speed # pixels/sec
         
         self.input_node = IONode(self, "input", offset=(0.0,0.0), node_type=NodeType.ITEM, capacity=1, abs_pos=self.start_pos)
         self.output_node = IONode(self, "output", offset=(0.0,0.0), node_type=NodeType.ITEM, capacity=1, abs_pos=self.end_pos)
         start_node.connected_nodes.append(self.input_node)
-        self.output_node.connected_nodes.append(end_node)
+        if isinstance(end_node, IONode):
+            self.output_node.connected_nodes.append(end_node)
 
         self.vector = (
             self.end_pos[0] - self.start_pos[0],
@@ -45,7 +50,7 @@ class Conveyor:
             
             if item.distance >= self.length:
                 # TODO add checks for full target inventory and stop conveyor if so
-                if self.output_node.connected_nodes[0].can_accept(1):
+                if self.output_node.connected_nodes and self.output_node.connected_nodes[0].can_accept(1):
                     # use collect_item instead of transfer_item because they are two different types of inventory
                     # mvoe item from belt items to output node
                     self.inventory_manager.collect_item(self.output_node.inventory, item.item_type)

@@ -33,6 +33,9 @@ class InputManager:
                     # No node found, but mouse is over machine
                     hovering_obj = obj
                 break  # Stop after first matching object
+            if isinstance(obj, Conveyor):
+                if dist(obj.output_node.abs_pos, event.pos) < 10:
+                    hovering_obj = obj.output_node
         self.game.state.hovering_obj = hovering_obj
 
     def handle_mouse_button_down(self, event, keys):
@@ -66,16 +69,25 @@ class InputManager:
         
     def handle_mouse_button_up(self, event):
         if self.game.state.conveyor_start is not None:
+            new_conveyor: Conveyor
             if isinstance(self.game.state.hovering_obj, IONode) and self.game.state.hovering_obj.kind == "input":
-                logger.info('Finished conveyor')
                 # TODO: do not allow conveyors with identical start and end nodes
                 # TODO: should conveyors be able to feel back into the same machine's input?
-                self.game.add_world_object(
-                    Conveyor (
+                new_conveyor = Conveyor (
                         self.game.state.conveyor_start, 
                         self.game.state.hovering_obj, 
                         self.game.inventory_manager
-                        )
+                )
+            elif self.game.state.hovering_obj is None:
+                new_conveyor = Conveyor(
+                        self.game.state.conveyor_start,
+                        event.pos,
+                        self.game.inventory_manager
                     )
+            if new_conveyor:
+                self.game.add_world_object(new_conveyor)
+                if isinstance(self.game.state.conveyor_start.host, Conveyor) and not self.game.state.conveyor_start.connected_nodes:
+                    self.game.state.conveyor_start.connected_nodes.append(new_conveyor.input_node)
+                logger.info('Finished conveyor')
             
             self.game.state.conveyor_start = None
