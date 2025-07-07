@@ -177,7 +177,7 @@ class UIInventoryPanel(UIElement):
         # Draw search bar
         search_rect = self.global_rect(self.search_bar_rect)
         pg.draw.rect(surface, (40, 40, 40), search_rect)
-        pg.draw.rect(surface, (200, 200, 200), search_rect, 2)
+        pg.draw.rect(surface, (90, 90, 90), search_rect, 2)
         text = self.search_query if (self.active or self.search_query) else "Search..."
         search_text = self.font.render(text, True, (200, 200, 200))
         surface.blit(search_text, search_rect.move(5, 2))

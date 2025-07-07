@@ -6,6 +6,7 @@ from core.systems.renderer import Renderer
 from core.systems.input import InputManager
 from core.systems.inventory import InventoryManager
 from core.systems.ui import UIManager
+from core.systems.camera import Camera
 
 from logger import logger
 
@@ -58,9 +59,12 @@ def main():
     renderer = Renderer()
     input_manager = InputManager()
     ui_manager = UIManager()
+    camera = Camera(c.DISPLAY_SIZE)
+    
+    asset_manager.add_asset("background", "grid", renderer.generate_background_grid_surface())
     
     # === Create & run Game === #
-    game = Game(display_surface, game_state, pg.Clock(), asset_manager, renderer, input_manager, inventory_manager, ui_manager)
+    game = Game(display_surface, game_state, pg.Clock(), asset_manager, renderer, input_manager, inventory_manager, ui_manager, camera)
     logger.info("Game initialization complete, running!")
     game.run()
     

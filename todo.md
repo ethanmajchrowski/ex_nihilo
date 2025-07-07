@@ -16,6 +16,9 @@ TODO
   - [ ] machine UI
 - [ ] conveyors:
   - [x] allow conveyors to be chained together
+- [ ] machines
+  - [ ] add robust system to manually input and output items with machines
+  - [ ] multiblock machines? connected machines that give others buffs/functionality?
 
 KNOWN BUGS
 - [ ] conveyors don't all stop at the same time when one connected conveyor stops

@@ -27,18 +27,24 @@ class InputManager:
         
         hovering_obj = []
         for obj in self.game.state.world_objects:
-            if isinstance(obj, Machine) and obj.rect.collidepoint(event.pos):
+            world_pos = self.game.camera.screen_to_world(event.pos)
+            if isinstance(obj, Machine) and obj.rect.collidepoint(world_pos):
                 for node in obj.nodes:
-                    if dist(node.abs_pos, event.pos) < 10:
+                    if dist(node.abs_pos, world_pos) < 10:
                         hovering_obj.append(node)
                 else:
                     # No node found, but mouse is over machine
                     hovering_obj.append(obj)
                 break  # Stop after first matching object
             if isinstance(obj, Conveyor):
-                if dist(obj.output_node.abs_pos, event.pos) < 10:
+                if dist(obj.output_node.abs_pos, world_pos) < 10:
                     hovering_obj.append(obj.output_node)
         self.game.state.hovering_obj = hovering_obj
+        
+        if not hovering_obj:
+            if self.game.state.dragging_camera:
+                dx, dy = event.rel
+                self.game.camera.move(-dx, -dy)
 
     def handle_mouse_button_down(self, event, keys):
         if not self.mouse_valid_pos(event.pos):
@@ -56,24 +62,13 @@ class InputManager:
                     self.game.state.conveyor_start = selected_obj
                     logger.info('Started conveyor')
             
-            # # Rock Crusher IONodes
+            if selected_obj is None:
+                self.game.state.dragging_camera = True
+            
             # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
-            # elif hasattr(selected_obj.host, "mtype") and selected_obj.host.mtype.name == "RockCrusher":
-            #     if selected_obj.kind == "input":
-            #         if event.button == 1:
-            #             self.game.inventory_manager.transfer_item(
-            #                 self.game.inventory_manager.global_inventory, selected_obj.inventory, "stone", 1
-            #             )
-            #         elif event.button == 3:
-            #             self.game.inventory_manager.transfer_item(
-            #                 selected_obj.inventory, self.game.inventory_manager.global_inventory, "any", 1
-            #             )
-            #     else:
-            #         self.game.inventory_manager.transfer_item(
-            #             selected_obj.inventory, self.game.inventory_manager.global_inventory, "gravel", 1
-            #         )
-        
+
     def handle_mouse_button_up(self, event):
+        pos = self.game.camera.screen_to_world(event.pos)
         if not self.mouse_valid_pos(event.pos) and self.game.state.conveyor_start is not None:
             self.game.state.conveyor_start = None
         
@@ -93,7 +88,7 @@ class InputManager:
             elif self.game.state.hovering_obj == []:
                 new_conveyor = Conveyor(
                         self.game.state.conveyor_start,
-                        event.pos,
+                        pos,
                         self.game.inventory_manager
                     )
             if new_conveyor:
@@ -103,6 +98,9 @@ class InputManager:
                 logger.info('Finished conveyor')
             
             self.game.state.conveyor_start = None
+        else:
+            if self.game.state.dragging_camera:
+                self.game.state.dragging_camera = False
     
         self.handle_mouse_motion(event)
 
