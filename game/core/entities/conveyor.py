@@ -14,9 +14,12 @@ class Conveyor:
         
         self.speed = speed # pixels/sec
         
-        self.input_node = IONode(self, "input", offset=(0.0,0.0), node_type=NodeType.ITEM, capacity=1, abs_pos=self.start_pos)
-        self.output_node = IONode(self, "output", offset=(0.0,0.0), node_type=NodeType.ITEM, capacity=1, abs_pos=self.end_pos)
+        self.input_node = IONode(self, "input", offset=(0.0,0.0), node_type=NodeType.ITEM, 
+        capacity=1, abs_pos=self.start_pos, transfer_interval=0.0)
+        self.output_node = IONode(self, "output", offset=(0.0,0.0), node_type=NodeType.ITEM, 
+        capacity=1, abs_pos=self.end_pos, transfer_interval=0.0)
         start_node.connected_nodes.append(self.input_node)
+        print(len(start_node.connected_nodes))
         if isinstance(end_node, IONode):
             self.output_node.connected_nodes.append(end_node)
 
@@ -33,7 +36,6 @@ class Conveyor:
         self.items: list[BeltItem] = []  # List of BeltItem, each with .distance
         self.max_items = self.length // item_spacing
         self.item_spacing = item_spacing
-        print(self.max_items)
 
         self.moving = True
         self.inventory_manager = inventory_manager
@@ -49,16 +51,14 @@ class Conveyor:
                 item.distance += self.speed * dt
             
             if item.distance >= self.length:
-                # TODO add checks for full target inventory and stop conveyor if so
-                if self.output_node.connected_nodes and self.output_node.connected_nodes[0].can_accept(1):
-                    # use collect_item instead of transfer_item because they are two different types of inventory
-                    # mvoe item from belt items to output node
-                    self.inventory_manager.collect_item(self.output_node.inventory, item.item_type)
+                # Conveyor outputs directly into its output_node's inventory
+                if self.output_node.can_accept(1):
+                    self.output_node.inventory[item.item_type] += 1
                     removed_items.append(item)
-                    print("moved item from conveyor inventory to output node")
                     self.moving = True
                 else:
                     self.moving = False
+
         
         # Remove items that made it to the end of the conveyor
         for item in removed_items:

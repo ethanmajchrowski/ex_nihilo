@@ -12,3 +12,7 @@ TODO
   - [ ] machine UI
 - [ ] conveyors:
   - [x] allow conveyors to be chained together
+
+KNOWN BUGS
+- [ ] conveyors don't all stop at the same time when one connected conveyor stops
+- [ ] figure out a way to remove the item buffering from conveyor IONodes

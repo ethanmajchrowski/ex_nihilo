@@ -51,7 +51,17 @@ class Renderer:
             if isinstance(obj, Machine):
                 self.draw_machine(surface, obj)
             if isinstance(obj, Conveyor):
-                pg.draw.aaline(surface, (255, 255, 255), obj.start_pos, obj.end_pos, 5)
+                color = c.CONVEYOR_ACTIVE_COLOR if obj.moving else c.CONVEYOR_INACTIVE_COLOR
+                pg.draw.aaline(surface, color, obj.start_pos, obj.end_pos, 5)
+                pg.draw.aacircle(surface, color, obj.end_pos, 2)
+                pg.draw.aacircle(surface, color, obj.start_pos, 2)
+
+        if state.conveyor_start is not None:
+            pg.draw.line(surface, (255, 255, 255), state.conveyor_start.abs_pos, mouse_pos, 5)
+
+        # draw items
+        for obj in state.world_objects:
+            if isinstance(obj, Conveyor):
                 for item, x, y in obj.get_item_info():
                     if asset_manager.is_asset("items", item):
                         item_surf = asset_manager.assets["items"][item]
@@ -60,9 +70,6 @@ class Renderer:
                         # pg.draw.circle(surface, (255, 0, 0), (x, y), 2)
                     else:
                         pg.draw.circle(surface, (255, 0, 0), (x, y), 2)
-
-        if state.conveyor_start is not None:
-            pg.draw.line(surface, (255, 255, 255), state.conveyor_start.abs_pos, mouse_pos, 5)
 
         # draw nodes
         for obj in state.world_objects:
@@ -73,9 +80,9 @@ class Renderer:
                         pg.draw.circle(surface, color, node.abs_pos, 5)
         
         # Draw inventory counts
-        hover_text = asset_manager.assets["fonts"]["inter"].render(
-            f"{state.hovering_obj}", True, (255, 255, 255))
-        surface.blit(hover_text, (10, 10))
+        hover_text = asset_manager.assets["fonts"]["inter_md"].render(
+            f"{len(state.hovering_obj)} {state.hovering_obj}", True, (255, 255, 255))
+        surface.blit(hover_text, (10, 50))
 
         # Hovering IONode inventory display
         if state.hovering_obj is not None and isinstance(state.hovering_obj, IONode):

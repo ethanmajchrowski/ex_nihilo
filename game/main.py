@@ -34,6 +34,8 @@ def load_assets() -> AssetManager:
     # Load fonts
     asset_manager.register_group("fonts")
     asset_manager.add_asset("fonts", "inter", asset_manager.load_font(r"assets\font\inter24.ttf", 24))
+    asset_manager.add_asset("fonts", "inter_md", asset_manager.load_font(r"assets\font\inter24.ttf", 18))
+    asset_manager.add_asset("fonts", "inter_sm", asset_manager.load_font(r"assets\font\inter24.ttf", 12))
 
     return asset_manager
 

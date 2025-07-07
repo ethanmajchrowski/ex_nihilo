@@ -11,7 +11,7 @@ class InventoryManager:
         
     def collect_item(self, inventory, item: str, amount: int = 1, time: int = 0):
         inventory[item] += amount
-        print(inventory[item] == 0)
+        # print(inventory[item] == 0)
         if inventory[item] == 0:
             del(inventory[item])
             logger.info(f"Cleared empty key ({item}) from inventory")

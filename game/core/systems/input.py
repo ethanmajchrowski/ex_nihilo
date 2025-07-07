@@ -22,63 +22,66 @@ class InputManager:
         if event.type == pg.MOUSEBUTTONUP:      self.handle_mouse_button_up(event)
 
     def handle_mouse_motion(self, event):
-        hovering_obj = None
+        hovering_obj = []
         for obj in self.game.state.world_objects:
             if isinstance(obj, Machine) and obj.rect.collidepoint(event.pos):
                 for node in obj.nodes:
                     if dist(node.abs_pos, event.pos) < 10:
-                        hovering_obj = node
-                        break
+                        hovering_obj.append(node)
                 else:
                     # No node found, but mouse is over machine
-                    hovering_obj = obj
+                    hovering_obj.append(obj)
                 break  # Stop after first matching object
             if isinstance(obj, Conveyor):
                 if dist(obj.output_node.abs_pos, event.pos) < 10:
-                    hovering_obj = obj.output_node
+                    hovering_obj.append(obj.output_node)
         self.game.state.hovering_obj = hovering_obj
 
     def handle_mouse_button_down(self, event, keys):
-        if self.game.state.hovering_obj is not None:
-            self.game.state.selected_obj = self.game.state.hovering_obj
+        if self.game.state.hovering_obj:
+            self.game.state.selected_obj = self.game.state.hovering_obj[0]
         else:
             self.game.state.selected_obj = None
         selected_obj = self.game.state.selected_obj
+        
+        if event.button == 1:
+            if isinstance(selected_obj, IONode):
+                if selected_obj.kind == "output": # if placing conveyor and hovering over output node
+                    self.game.state.conveyor_start = selected_obj
+                    logger.info('Started conveyor')
             
-        if isinstance(selected_obj, IONode):
-            if keys[pg.K_g] and selected_obj.kind == "output": # if placing conveyor and hovering over output node
-                self.game.state.conveyor_start = selected_obj
-                logger.info('Started conveyor')
-            
-            # Rock Crusher IONodes
-            # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
-            elif hasattr(selected_obj.host, "mtype") and selected_obj.host.mtype.name == "RockCrusher":
-                if selected_obj.kind == "input":
-                    if event.button == 1:
-                        self.game.inventory_manager.transfer_item(
-                            self.game.inventory_manager.global_inventory, selected_obj.inventory, "stone", 1
-                        )
-                    elif event.button == 3:
-                        self.game.inventory_manager.transfer_item(
-                            selected_obj.inventory, self.game.inventory_manager.global_inventory, "any", 1
-                        )
-                else:
-                    self.game.inventory_manager.transfer_item(
-                        selected_obj.inventory, self.game.inventory_manager.global_inventory, "gravel", 1
-                    )
+            # # Rock Crusher IONodes
+            # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
+            # elif hasattr(selected_obj.host, "mtype") and selected_obj.host.mtype.name == "RockCrusher":
+            #     if selected_obj.kind == "input":
+            #         if event.button == 1:
+            #             self.game.inventory_manager.transfer_item(
+            #                 self.game.inventory_manager.global_inventory, selected_obj.inventory, "stone", 1
+            #             )
+            #         elif event.button == 3:
+            #             self.game.inventory_manager.transfer_item(
+            #                 selected_obj.inventory, self.game.inventory_manager.global_inventory, "any", 1
+            #             )
+            #     else:
+            #         self.game.inventory_manager.transfer_item(
+            #             selected_obj.inventory, self.game.inventory_manager.global_inventory, "gravel", 1
+            #         )
         
     def handle_mouse_button_up(self, event):
         if self.game.state.conveyor_start is not None:
-            new_conveyor: Conveyor
-            if isinstance(self.game.state.hovering_obj, IONode) and self.game.state.hovering_obj.kind == "input":
+            new_conveyor: Conveyor | None = None
+            if (self.game.state.hovering_obj 
+                and isinstance(self.game.state.hovering_obj[0], IONode) 
+                and self.game.state.hovering_obj[0].kind == "input"):
+                
                 # TODO: do not allow conveyors with identical start and end nodes
                 # TODO: should conveyors be able to feel back into the same machine's input?
                 new_conveyor = Conveyor (
                         self.game.state.conveyor_start, 
-                        self.game.state.hovering_obj, 
+                        self.game.state.hovering_obj[0], 
                         self.game.inventory_manager
                 )
-            elif self.game.state.hovering_obj is None:
+            elif self.game.state.hovering_obj == []:
                 new_conveyor = Conveyor(
                         self.game.state.conveyor_start,
                         event.pos,
@@ -91,3 +94,5 @@ class InputManager:
                 logger.info('Finished conveyor')
             
             self.game.state.conveyor_start = None
+    
+        self.handle_mouse_motion(event)

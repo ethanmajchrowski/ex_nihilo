@@ -20,7 +20,7 @@ class GameState:
     """Contains dynamic data for game."""
     def __init__(self):
         self.world_objects = []
-        self.hovering_obj: Any = None
+        self.hovering_obj: list[Any] = []
         self.selected_obj = None
         self.conveyor_start: IONode | None = None
         self.running = True
@@ -53,10 +53,10 @@ class Game:
         self.add_world_object(Machine((800, 200), MINESHAFT))
         self.add_world_object(Machine((800, 250), MINESHAFT))
         
-        self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[1].nodes[0], inventory_manager))
-        self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[2].nodes[0], inventory_manager))
-        self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
-        self.add_world_object(Conveyor(self.state.world_objects[4].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
+        # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[1].nodes[0], inventory_manager))
+        # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[2].nodes[0], inventory_manager))
+        # self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
+        # self.add_world_object(Conveyor(self.state.world_objects[4].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
 
         self.fps_update_time = 0.0
 
@@ -70,6 +70,7 @@ class Game:
 
     def update(self, dt: float) -> None:
         """Update game state."""
+        print('===== UPDATE =====')
         if self.fps_update_time < 0.25:
             self.fps_update_time += dt
         else:

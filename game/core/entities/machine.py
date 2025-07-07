@@ -1,6 +1,7 @@
 from collections import defaultdict
 import core.entities.node as Node
 from pygame import rect
+from logger import logger
 
 from typing import Callable, TYPE_CHECKING
 # if TYPE_CHECKING:
@@ -138,9 +139,9 @@ class Machine:
                             break
 
                     if remaining > 0:
-                        print(f"[WARNING] Output overflow during execution of {self.type}: {item} x{remaining}")
+                        logger.warning(f"[WARNING] Output overflow during execution of {self.type}: {item} x{remaining}")
 
-                print(f"{self.type} finished recipe ({recipe.inputs} -> {recipe.outputs}) ({recipe.duration}s)")
+                logger.info(f"{self.type} finished recipe ({recipe.inputs} -> {recipe.outputs}) ({recipe.duration}s)")
     
     @property
     def __name__(self):
