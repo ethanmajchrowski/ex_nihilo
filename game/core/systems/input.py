@@ -22,6 +22,9 @@ class InputManager:
         if event.type == pg.MOUSEBUTTONUP:      self.handle_mouse_button_up(event)
 
     def handle_mouse_motion(self, event):
+        if not self.mouse_valid_pos(event.pos):
+            return
+        
         hovering_obj = []
         for obj in self.game.state.world_objects:
             if isinstance(obj, Machine) and obj.rect.collidepoint(event.pos):
@@ -38,6 +41,9 @@ class InputManager:
         self.game.state.hovering_obj = hovering_obj
 
     def handle_mouse_button_down(self, event, keys):
+        if not self.mouse_valid_pos(event.pos):
+            return
+        
         if self.game.state.hovering_obj:
             self.game.state.selected_obj = self.game.state.hovering_obj[0]
         else:
@@ -68,6 +74,9 @@ class InputManager:
             #         )
         
     def handle_mouse_button_up(self, event):
+        if not self.mouse_valid_pos(event.pos) and self.game.state.conveyor_start is not None:
+            self.game.state.conveyor_start = None
+        
         if self.game.state.conveyor_start is not None:
             new_conveyor: Conveyor | None = None
             if (self.game.state.hovering_obj 
@@ -96,3 +105,13 @@ class InputManager:
             self.game.state.conveyor_start = None
     
         self.handle_mouse_motion(event)
+
+    def mouse_valid_pos(self, pos) -> bool:
+        for window in self.game.ui_manager.windows:
+            if window.global_rect().collidepoint(pos) and window.visible:
+                return False
+        
+        if self.game.ui_manager.toolbar.global_rect().collidepoint(pos):
+            return False
+        
+        return self.game.display.get_rect().collidepoint(pos)
