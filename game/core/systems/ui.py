@@ -1,92 +1,258 @@
 import pygame as pg
-import pygame_gui
-from pygame_gui.core import ObjectID
-from pygame_gui.core.interfaces import IUIManagerInterface
 import config.configuration as c
 
 from typing import TYPE_CHECKING, List
 if TYPE_CHECKING:
     from core.game import Game
 
-# custom class to overrider on_close_window_button_pressed to hide instead of kill the window
-class UIHidingWindow(pygame_gui.elements.UIWindow):
-    def __init__(self, rect: pg.Rect | pg.FRect, manager: IUIManagerInterface | None = None, window_display_title: str = "", element_id: List[str] | str | None = None, object_id: ObjectID | str | None = None, resizable: bool = False, visible: int = 1, draggable: bool = True, *, ignore_shadow_for_initial_size_and_pos: bool = True, always_on_top: bool = False):
-        super().__init__(rect, manager, window_display_title, element_id, object_id, resizable, visible, draggable, ignore_shadow_for_initial_size_and_pos=ignore_shadow_for_initial_size_and_pos, always_on_top=always_on_top)
+class UIElement:
+    def __init__(self, rect, visible=True):
+        self.rect = pg.Rect(rect)
+        self.visible = visible
+        self.children = []
+        self.parent = None
 
-    def on_close_window_button_pressed(self):
-        self.hide()
+    def draw(self, surface):
+        if not self.visible:
+            return
+        self.draw_self(surface)
+        for child in self.children:
+            child.draw(surface)
+
+    def draw_self(self, surface):
+        pass  # Override in subclass
+
+    def handle_event(self, event):
+        if not self.visible:
+            return
+        for child in self.children:
+            child.handle_event(event)
+
+    def add_child(self, child):
+        self.children.append(child)
+        child.parent = self
+
+    def global_rect(self, rect=None):
+        if rect is None:
+            rect = self.rect
+        if not self.parent:
+            return rect
+        parent_rect = self.parent.global_rect()
+        return rect.move(parent_rect.topleft)
+
+class UIToolbar(UIElement):
+    def __init__(self, screen_width, height=40, padding=10, bg_color=(50, 50, 50)):
+        super().__init__(pg.Rect(0, 0, screen_width, height))
+        self.bg_color = bg_color
+        self.padding = padding
+
+    def draw_self(self, surface):
+        rect = self.global_rect()
+        pg.draw.rect(surface, self.bg_color, rect)
+        pg.draw.rect(surface, (100, 100, 100), rect, 2)
+        
+class UIWindow(UIElement):
+    def __init__(self, rect, title="Window", bg_color=(50, 50, 50)):
+        super().__init__(rect)
+        self.title = title
+        self.bg_color = bg_color
+        self.visible = True
+        self.font = pg.font.SysFont("Arial", 16)
+
+        self.close_button = UIButton(pg.Rect(self.rect.width - 25, 5, 20, 20), "X", self.close)
+        self.add_child(self.close_button)
+
+    def draw_self(self, surface):
+        rect = self.global_rect(self.rect)
+        pg.draw.rect(surface, self.bg_color, rect, border_radius=10)
+        # draw outline
+        pg.draw.rect(surface, (100, 100, 100), rect, 2, border_radius=10)
+        title_surf = self.font.render(self.title, True, (255, 255, 255))
+        surface.blit(title_surf, rect.move(10, 5))
+    
+    def close(self):
+        self.visible = False
+    
+    def add_child(self, child):
+        self.children.append(child)
+        child.parent = self
+        if hasattr(child, "resize_to_parent"):
+            child.resize_to_parent()
+
+class UILabel(UIElement):
+    def __init__(self, rect, text, font_size=16, color=(255, 255, 255)):
+        super().__init__(rect)
+        self.text = text
+        self.color = color
+        self.font = pg.font.SysFont("Arial", font_size)
+
+    def draw_self(self, surface):
+        rect = self.global_rect()
+        text_surf = self.font.render(self.text, True, self.color)
+        surface.blit(text_surf, rect)
+
+class UIButton(UIElement):
+    def __init__(self, rect, text, callback=None, bg_color=(60, 60, 60), hover_color=(80, 80, 80), text_color=(255, 255, 255)):
+        super().__init__(rect)
+        self.text = text
+        self.callback = callback
+        self.bg_color = bg_color
+        self.hover_color = hover_color
+        self.text_color = text_color
+        self.hover = False
+        self.font = pg.font.SysFont("Arial", 16)
+
+    def draw_self(self, surface):
+        rect = self.global_rect()
+        color = self.hover_color if self.hover else self.bg_color
+        pg.draw.rect(surface, color, rect, border_radius=5)
+        text_surf = self.font.render(self.text, True, self.text_color)
+        surface.blit(text_surf, text_surf.get_rect(center=rect.center))
+
+    def handle_event(self, event):
+        rect = self.global_rect()
+        if event.type == pg.MOUSEMOTION:
+            self.hover = rect.collidepoint(event.pos)
+        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if rect.collidepoint(event.pos) and self.callback:
+                self.callback()
+        super().handle_event(event)
+
+class UIInventoryPanel(UIElement):
+    def __init__(self, game: "Game"):
+        super().__init__(pg.Rect(0, 0, 0, 0))  # placeholder rect
+        self.game = game
+        self.search_query = ""
+        self.scroll_offset = 0
+        self.font = pg.font.SysFont("Arial", 16)
+        self.row_height = 40
+        self.visible_rows = 0
+        self.search_bar_height = 25
+        self.active = False
+        
+        self.hover = False
+        self.hovering_pos = (0, 0)
+    
+    def resize_to_parent(self):
+        print(self.rect)
+        if not self.parent:
+            return
+        parent_rect = self.parent.rect
+        self.rect = pg.Rect(5, 30, parent_rect.width - 10, parent_rect.height - 35)
+        self.visible_rows = (self.rect.height - self.search_bar_height - 5) // self.row_height
+        self.search_bar_rect = pg.Rect(self.rect.x + 5, self.rect.y + 5, self.rect.width - 10, 20)
+
+    def handle_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            self.active = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
+            if self.active and event.button == 3:
+                self.search_query = ""
+
+        elif event.type == pg.KEYDOWN and self.active:
+            if event.key == pg.K_BACKSPACE:
+                self.search_query = self.search_query[:-1]
+            elif event.key == pg.K_RETURN:
+                self.active = False
+            elif event.unicode.isprintable():
+                self.search_query += event.unicode
+
+        elif event.type == pg.MOUSEWHEEL:
+            self.scroll_offset -= event.y * self.row_height
+            max_offset = max(0, len(self.filtered_items()) - self.visible_rows) * self.row_height
+            self.scroll_offset = max(0, min(self.scroll_offset, max_offset))
+        
+        elif event.type == pg.MOUSEMOTION:
+            self.hover = self.global_rect().collidepoint(event.pos)
+            if self.hover:
+                self.hovering_pos = event.pos
+
+    def filtered_items(self):
+        inv = self.game.inventory_manager.global_inventory
+        return sorted([name for name in inv if self.search_query.lower() in name.lower()])
+
+    def draw_self(self, surface):
+        #background
+        pg.draw.rect(surface, (20, 20, 20), self.global_rect(), border_radius=5)
+
+        # Draw search bar
+        search_rect = self.global_rect(self.search_bar_rect)
+        pg.draw.rect(surface, (40, 40, 40), search_rect)
+        pg.draw.rect(surface, (200, 200, 200), search_rect, 2)
+        text = self.search_query if (self.active or self.search_query) else "Search..."
+        search_text = self.font.render(text, True, (200, 200, 200))
+        surface.blit(search_text, search_rect.move(5, 2))
+
+        # Draw filtered items
+        items = self.filtered_items()
+        start_index = self.scroll_offset // self.row_height
+        end_index = min(start_index + self.visible_rows, len(items))
+        display_items = items[start_index:end_index]
+
+        for i, name in enumerate(display_items):
+            y = self.rect.y + 30 + i * self.row_height
+            self.draw_item_row(surface, name, y)
+
+    def draw_item_row(self, surface, name, y):
+        rect = self.global_rect(pg.Rect(self.rect.x + 5, y, self.rect.width - 10, self.row_height - 2))
+        color = (60, 60, 60) if not (self.hover and rect.collidepoint(self.hovering_pos)) else (70, 70, 70)
+        pg.draw.rect(surface, color, rect)
+
+        # Image
+        if self.game.asset_manager.is_asset("items", name):
+            image = self.game.asset_manager.assets["items"][name]
+        else:
+            image = self.game.asset_manager.assets["items"]["null"]
+        
+        image = pg.transform.scale2x(image)
+        if image:
+            surface.blit(image, (rect.x + 2, rect.y + 2))
+
+        # Name and amount
+        amount = self.game.inventory_manager.global_inventory.get(name, 0)
+        text = f"{name.title()}: {amount}"
+        label = self.font.render(text, True, (255, 255, 255))
+        surface.blit(label, (rect.x + 40, rect.y + 10))
 
 class UIManager:
-    def __init__(self, display_size: tuple[int, int]) -> None:
-        self.ui_manager = pygame_gui.UIManager(display_size, r"assets\graphics\themes\theme.json")
-        # self.ui_manager = pygame_gui.UIManager(display_size)
-        self.ui_manager.theme_update_check_interval = 0.25
+    def __init__(self):
         self.game: "Game"
+        self.elements = []
+        self.windows: list[UIWindow] = []  # for external access if needed
+
+    def create_ui(self):
+        # Toolbar
+        self.toolbar = UIToolbar(screen_width=c.DISPLAY_WIDTH)
+        self.add(self.toolbar)
+
+        # Windows
+        toolbars = ["Inventory", "Crafting", "Recipes", "Statistics"]
+        for i in range(4):
+            window_width, window_height = c.DISPLAY_WIDTH * 0.75, c.DISPLAY_HEIGHT * 0.80
+            window_left, window_top = c.DISPLAY_WIDTH_CENTER - window_width//2, c.DISPLAY_HEIGHT_CENTER - window_height//2
+            win = UIWindow(pg.Rect(window_left, window_top, window_width, window_height), title=toolbars[i])
+            self.add(win)
+            self.windows.append(win)
+            win.visible = False
+
+        # Toolbar buttons to toggle windows
+        for i in range(4):
+            def make_callback(w=self.windows[i]):
+                return lambda: setattr(w, "visible", not w.visible)
+
+            btn = UIButton(pg.Rect(0, 0, 80, 30), toolbars[i], make_callback())
+            btn.rect.topleft = (c.DISPLAY_WIDTH // 2 - 170 + i * 90, 5)
+            self.toolbar.add_child(btn)
         
-        class containers:
-            top_bar = pygame_gui.elements.UIPanel(relative_rect=pg.Rect(0, 10, (30*4)+12, 36), manager=self.ui_manager, 
-                                                  anchors={"centerx": "centerx"})
-            
-            _rect = pg.Rect(c.DISPLAY_WIDTH_CENTER-300, c.DISPLAY_HEIGHT_CENTER-250, 600, 500)
-            inventory_window = UIHidingWindow(rect=_rect, manager=self.ui_manager, 
-                                                  window_display_title="Inventory", resizable=True)
-            inventory_window.hide()
-            recipe_window = UIHidingWindow(rect=_rect, manager=self.ui_manager, 
-                                                  window_display_title="Recipes", resizable=True)
-            recipe_window.hide()
-            build_window = UIHidingWindow(rect=_rect, manager=self.ui_manager, 
-                                                  window_display_title="Build", resizable=True)
-            build_window.hide()
-            stats_window = UIHidingWindow(rect=_rect, manager=self.ui_manager, 
-                                                  window_display_title="Statistics", resizable=True)
-            stats_window.hide()
-        self.containers = containers
-        
-        class elements:
-            # === Top bar buttons === #
-            inventory_tab_button = pygame_gui.elements.UIButton(relative_rect=(0, 0, 30, 30), 
-                                             manager=self.ui_manager, text="I", 
-                                             container=self.containers.top_bar)
-            inventory_tab_button.set_tooltip("Inventory")
-            recipes_tab_button = pygame_gui.elements.UIButton(relative_rect=(30, 0, 30, 30), 
-                                             manager=self.ui_manager, text="R", 
-                                             container=self.containers.top_bar)
-            recipes_tab_button.set_tooltip("Recipes")
-            build_tab_button = pygame_gui.elements.UIButton(relative_rect=(60, 0, 30, 30), 
-                                             manager=self.ui_manager, text="B", 
-                                             container=self.containers.top_bar)
-            build_tab_button.set_tooltip("Build")
-            stats_tab_button = pygame_gui.elements.UIButton(relative_rect=(90, 0, 30, 30), 
-                                             manager=self.ui_manager, text="S", 
-                                             container=self.containers.top_bar)
-            stats_tab_button.set_tooltip("Statistics")
-            
-        self.elements = elements
-            
-    def render_ui(self, surface: pg.Surface) -> None:
-        self.ui_manager.draw_ui(surface)
-    
-    def update_ui(self, dt: float) -> None:
-        self.ui_manager.update(dt)
-        
-    def process_event(self, event) -> None:
-        self.ui_manager.process_events(event)
-        
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            match event.ui_element:
-                # Gameplay windows
-                case self.elements.inventory_tab_button:
-                    if not self.containers.inventory_window.visible:
-                        self.containers.inventory_window.show()
-                case self.elements.recipes_tab_button:
-                    if not self.containers.recipe_window.visible:
-                        self.containers.recipe_window.show()
-                case self.elements.build_tab_button:
-                    if not self.containers.build_window.visible:
-                        self.containers.build_window.show()
-                case self.elements.stats_tab_button:
-                    if not self.containers.stats_window.visible:
-                        self.containers.stats_window.show()
-    
-    def hello_button_pressed(self):
-        print("hello!")
+        inv_panel = UIInventoryPanel(self.game)
+        self.windows[0].add_child(inv_panel)
+
+    def add(self, element):
+        self.elements.append(element)
+
+    def draw(self, surface):
+        for el in self.elements:
+            el.draw(surface)
+
+    def handle_event(self, event):
+        for el in self.elements:
+            el.handle_event(event)

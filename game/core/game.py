@@ -46,6 +46,7 @@ class Game:
         # System manager linking to self
         self.input_manager.game = self
         self.ui_manager.game = self
+        self.ui_manager.create_ui()
         
         self.add_world_object(Machine((200, 200), ROCK_CRUSHER))
         self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager]))
@@ -53,6 +54,9 @@ class Game:
         self.add_world_object(Machine((800, 200), MINESHAFT))
         self.add_world_object(Machine((800, 250), MINESHAFT))
         
+        
+        for i in range(50):
+            self.inventory_manager.collect_item(self.inventory_manager.global_inventory, f"zBlank {i}")
         # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[1].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[2].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
@@ -66,11 +70,11 @@ class Game:
         keys = pg.key.get_pressed()
         for event in events:
             self.input_manager.process_event(event, keys)
-            self.ui_manager.process_event(event)
+            self.ui_manager.handle_event(event)
 
     def update(self, dt: float) -> None:
         """Update game state."""
-        print('===== UPDATE =====')
+        # print('===== UPDATE =====')
         if self.fps_update_time < 0.25:
             self.fps_update_time += dt
         else:
@@ -83,12 +87,12 @@ class Game:
             # Update everything else
             obj.update(dt)
         
-        self.ui_manager.update_ui(dt)
+        # self.ui_manager.update_ui(dt)
 
     def render(self, mouse_pos) -> None:
         """Draw everything to the screen."""
         self.renderer.render(self.display, self.state, mouse_pos, self.asset_manager, self.inventory_manager)
-        self.ui_manager.render_ui(self.display)
+        self.ui_manager.draw(self.display)
 
     def run(self) -> None:
         """Run main game loop."""

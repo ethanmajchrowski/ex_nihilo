@@ -8,6 +8,10 @@ TODO
   - [x] basics
   - [ ] machine placement
   - [ ] inventory view
+    - [x] basics
+    - [x] search
+    - [ ] filter (A-Z, reverse, quantity, recently changed, etc. probably going to be a pain in the ass but nice to have)
+    - [ ] row buttons? ("View Recipe", "Pin Item", "Export", "Trash Item", etc.)
   - [ ] recipe browser (JEI-adjacent)
   - [ ] machine UI
 - [ ] conveyors:
