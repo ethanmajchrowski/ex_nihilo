@@ -19,7 +19,6 @@ class Conveyor:
         self.output_node = IONode(self, "output", offset=(0.0,0.0), node_type=NodeType.ITEM, 
         capacity=1, abs_pos=self.end_pos, transfer_interval=0.0)
         start_node.connected_nodes.append(self.input_node)
-        print(len(start_node.connected_nodes))
         if isinstance(end_node, IONode):
             self.output_node.connected_nodes.append(end_node)
 

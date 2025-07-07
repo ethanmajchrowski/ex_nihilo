@@ -1,6 +1,7 @@
 # Library imports
 import pygame as pg
 from typing import Any
+from enum import Enum
 
 # Project imports
 import config.configuration as c
@@ -17,6 +18,8 @@ from core.entities.conveyor import Conveyor
 from core.entities.machine import Machine
 from core.entities.machines.machine_types import ROCK_CRUSHER, IMPORTER, MINESHAFT
 
+from util.algorithms import lines_intersect
+
 class GameState:
     """Contains dynamic data for game."""
     def __init__(self):
@@ -26,7 +29,15 @@ class GameState:
         self.conveyor_start: IONode | None = None
         self.running = True
         self.dragging_camera = False
-
+        
+        self.removing_conveyors: tuple[int, int] | bool = False
+        
+        class tools:
+            def __init__(self) -> None:
+                self.REMOVE_CONVEYORS: bool = True
+        
+        self.tools = tools()
+        
 class Game:
     """Master class responsible for all game control"""
 
@@ -45,11 +56,12 @@ class Game:
         self.ui_manager = ui_manager
         self.input_manager = input_manager
         self.camera = camera
-
+        
         # System manager linking to self
         self.input_manager.game = self
         self.ui_manager.game = self
         self.ui_manager.create_ui()
+        
         
         self.add_world_object(Machine((200, 200), ROCK_CRUSHER))
         self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager]))
@@ -71,11 +83,12 @@ class Game:
         """Process all game events (input, quit, etc.)."""
         events = pg.event.get()
         keys = pg.key.get_pressed()
-        if keys[pg.K_d]: self.camera.move(500*dt, 0)
-        if keys[pg.K_a]: self.camera.move(-500*dt, 0)
-        if keys[pg.K_w]: self.camera.move(0, -500*dt)
-        if keys[pg.K_s]: self.camera.move(0, 500*dt)
-        if keys[pg.K_h]: self.camera.set_pos(0, 0)
+        if not self.ui_manager.inv_panel.active:
+            if keys[pg.K_d]: self.camera.move(500*dt, 0)
+            if keys[pg.K_a]: self.camera.move(-500*dt, 0)
+            if keys[pg.K_w]: self.camera.move(0, -500*dt)
+            if keys[pg.K_s]: self.camera.move(0, 500*dt)
+            if keys[pg.K_h]: self.camera.set_pos(0, 0)
         for event in events:
             self.input_manager.process_event(event, keys)
             self.ui_manager.handle_event(event)
@@ -125,6 +138,25 @@ class Game:
             self.render(mouse_pos)
                         
             pg.display.update()
+            
+    def remove_conveyors(self, pos1, pos2):
+        to_remove: list[Conveyor] = []
+        for obj in self.state.world_objects:
+            if isinstance(obj, Conveyor):
+                if lines_intersect(pos1, pos2, obj.start_pos, obj.end_pos):
+                    to_remove.append(obj)
+
+        for conveyor in to_remove:
+            self.state.world_objects.remove(conveyor)
+            for item in conveyor.items:
+                self.inventory_manager.collect_item(self.inventory_manager.global_inventory, item.item_type)
+            for item, amnt in conveyor.input_node.inventory.items():
+                self.inventory_manager.global_inventory[item] += amnt
+                conveyor.input_node.inventory[item] -= amnt
+            for item, amnt in conveyor.output_node.inventory.items():
+                self.inventory_manager.global_inventory[item] += amnt
+                conveyor.output_node.inventory[item] -= amnt
+
     
     def add_world_object(self, new_object):
         self.state.world_objects.append(new_object)

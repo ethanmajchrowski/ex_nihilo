@@ -8,6 +8,8 @@ from core.systems.asset import AssetManager
 from core.systems.inventory import InventoryManager
 from core.systems.camera import Camera
 
+from util.algorithms import lines_intersect
+
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.game import GameState
@@ -122,7 +124,18 @@ class Renderer:
                     for node in obj.nodes:
                         color = (0, 0, 255) if node.kind == "input" else (255, 153, 0)
                         pg.draw.circle(surface, color, (node.abs_pos[0] + offset[0], node.abs_pos[1] + offset[1]), 5)
+                        if node in state.hovering_obj:
+                            pg.draw.circle(surface, color, (node.abs_pos[0] + offset[0], node.abs_pos[1] + offset[1]), 9)
         
+        # draw conveyor cut
+        if state.removing_conveyors:
+            assert isinstance(state.removing_conveyors, tuple)
+            pg.draw.aaline(surface, (255, 0, 0), mouse_pos, state.removing_conveyors)
+            for obj in state.world_objects:
+                if isinstance(obj, Conveyor):
+                    if lines_intersect(obj.start_pos, obj.end_pos, mouse_pos, state.removing_conveyors):
+                        pg.draw.aaline(surface, (255, 0, 100), obj.start_pos, obj.end_pos)
+    
         # Draw inventory counts
         # hover_text = asset_manager.assets["fonts"]["inter_md"].render(
         #     f"{len(state.hovering_obj)} {state.hovering_obj}", True, (255, 255, 255))

@@ -250,7 +250,7 @@ class UIMachineTooltip(UIElement):
 
         recipe_text = ""
         if recipe.inputs and recipe.outputs:
-            recipe_text = f"> Recipe: {recipe.inputs} -> {recipe.outputs} ({recipe.duration}s)"
+            recipe_text = f"> {recipe.inputs} -> {recipe.outputs} ({recipe.duration}s)"
         elif recipe.inputs and not recipe.outputs:
             recipe_text = f"> Collecting {recipe.inputs} ({recipe.duration}s)"
         elif recipe.outputs and not recipe.inputs:
@@ -307,8 +307,8 @@ class UIManager:
             btn.rect.topleft = (c.DISPLAY_WIDTH // 2 - 170 + i * 90, 5)
             self.toolbar.add_child(btn)
         
-        inv_panel = UIInventoryPanel(self.game)
-        self.windows[0].add_child(inv_panel)
+        self.inv_panel = UIInventoryPanel(self.game)
+        self.windows[0].add_child(self.inv_panel)
         
         self.tooltip = UIMachineTooltip(self.game)
         self.elements.append(self.tooltip)

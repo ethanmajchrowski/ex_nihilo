@@ -63,7 +63,12 @@ class InputManager:
                     logger.info('Started conveyor')
             
             if selected_obj is None:
-                self.game.state.dragging_camera = True
+                if not self.game.state.tools.REMOVE_CONVEYORS:
+                    self.game.state.dragging_camera = True
+                
+                if self.game.state.tools.REMOVE_CONVEYORS and not self.game.state.removing_conveyors:
+                    print("starting to cut conveyor")
+                    self.game.state.removing_conveyors = event.pos
             
             # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
 
@@ -101,6 +106,10 @@ class InputManager:
         else:
             if self.game.state.dragging_camera:
                 self.game.state.dragging_camera = False
+            if self.game.state.tools.REMOVE_CONVEYORS and self.game.state.removing_conveyors:
+                print('done cutting conveyor')
+                self.game.remove_conveyors(self.game.state.removing_conveyors, event.pos)
+                self.game.state.removing_conveyors = False
     
         self.handle_mouse_motion(event)
 
