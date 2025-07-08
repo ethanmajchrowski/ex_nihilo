@@ -94,3 +94,14 @@ class IONode:
         Gets quantity of contained item within this node.
         """
         return self.inventory[item]
+    
+    def recalculate_abs_pos(self, abs_pos_override: tuple[int, int] = (0, 0)):
+        if hasattr(self.host, "pos") and hasattr(self.host, "rect"):
+            self.abs_pos: tuple[int, int] = (
+                self.host.pos[0] + self.host.rect.w * self.offset[0] / 2, 
+                self.host.pos[1] + self.host.rect.h * self.offset[1] / 2
+            )
+        else:
+            self.abs_pos = abs_pos_override
+            if self.abs_pos == (0, 0):
+                logger.warning("Node recalculated abs_pos to (0, 0) (default without machine). Is this intentional?")

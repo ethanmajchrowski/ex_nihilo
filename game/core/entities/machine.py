@@ -40,10 +40,11 @@ class Machine:
 
         self.nodes = [Node.IONode(self, kind, offset, node_type, capacity, transfer_interval) 
                       for kind, offset, node_type, capacity, transfer_interval in mtype.nodes]
-        if self.mtype.supports_rotation:
+        if self.mtype.supports_rotation and rotation != 0:
             for node in self.nodes:
-                for _ in range(rotation % 4): # 90* rotations
+                for _ in range(4-(rotation % 4)): # CCW
                     node.offset = (node.offset[1], node.offset[0]*-1)
+                node.recalculate_abs_pos()
                 
         self.progress = 0
         self.selected_recipe_index = 0
