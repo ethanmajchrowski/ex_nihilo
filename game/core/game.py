@@ -30,11 +30,15 @@ class GameState:
         self.running = True
         self.dragging_camera = False
         
+        self.selected_placing = None
+        
         self.removing_conveyors: tuple[int, int] | bool = False
         
         class tools:
             def __init__(self) -> None:
                 self.REMOVE_CONVEYORS: bool = False
+                self.PLACING_CONVEYORS: bool = False
+                self.PLACING_MACHINE: bool = False
         
         self.tools = tools()
         

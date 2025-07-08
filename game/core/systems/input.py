@@ -64,7 +64,8 @@ class InputManager:
         
         if event.button == 1:
             if isinstance(selected_obj, IONode):
-                if selected_obj.kind == "output": # if placing conveyor and hovering over output node
+                # if placing conveyor and hovering over output node
+                if selected_obj.kind == "output" and self.game.state.tools.PLACING_CONVEYORS: 
                     self.game.state.conveyor_start = selected_obj
                     logger.info('Started conveyor')
             
