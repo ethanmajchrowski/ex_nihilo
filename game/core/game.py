@@ -61,6 +61,8 @@ class Game:
         self.input_manager = input_manager
         self.camera = camera
         
+        self.machine_registry = [ROCK_CRUSHER, IMPORTER, MINESHAFT]
+        
         # System manager linking to self
         self.input_manager.game = self
         self.ui_manager.game = self
@@ -76,8 +78,6 @@ class Game:
         self.add_world_object(create_machine(MINESHAFT, (800, 250)))
         self.state.world_objects[-1].set_active_recipe(c.RECIPE_DB.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
         
-        for i in range(50):
-            self.inventory_manager.collect_item(self.inventory_manager.global_inventory, f"zBlank {i}")
         # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[1].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[2].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))

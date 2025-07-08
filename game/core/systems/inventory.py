@@ -1,6 +1,7 @@
 from collections import defaultdict, namedtuple
 from core.entities.node import IONode
 from logger import logger
+from core.entities.machine import MachineType
 
 class InventoryManager:
     CollectionEvent = namedtuple("CollectionEvent", "item new_total delta timestamp")
@@ -74,3 +75,19 @@ class InventoryManager:
 
         self.transfer_item(self.global_inventory, node.inventory, item, amount)
         return True
+
+    def can_craft(self, machine_type: MachineType, amount: int = 1) -> bool:
+        for item, amount in machine_type.craft_cost.items():
+            if not self.global_inventory[item] >= amount:
+                return False
+        else:
+            return True
+    
+    def craft(self, machine_type: MachineType, craft_amount: int = 1):
+        if not self.can_craft(machine_type, craft_amount):
+            return
+        
+        for item, amount in machine_type.craft_cost.items():
+            self.global_inventory[item] -= amount
+        
+        self.global_inventory[machine_type.name] += craft_amount

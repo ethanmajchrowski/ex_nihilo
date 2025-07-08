@@ -11,7 +11,7 @@ from typing import Callable, TYPE_CHECKING
 class MachineType:
     def __init__(self, name: str, 
                  nodes: list[tuple[str, tuple[float, float], Node.NodeType, int, float]],
-                 asset_info: dict, craft_cost: dict, custom_update: None | Callable = None,
+                 asset_info: dict, craft_cost: dict[str, int], custom_update: None | Callable = None,
                  supports_rotation = True, supports_recipes = True, custom_data: dict = {}, 
                  machine_class = None):
         self.name = name

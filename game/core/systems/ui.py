@@ -284,6 +284,154 @@ class UIMachineTooltip(UIElement):
             surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 8 + i * 20))
             i += 1
 
+class UICraftingPanel(UIElement):
+    def __init__(self, game: "Game"):
+        super().__init__(pg.Rect(0, 0, 0, 0))
+        self.game = game
+        self.search_query = ""
+        self.scroll_offset = 0
+        self.font = pg.font.SysFont("Arial", 16)
+        self.row_height = 40
+        self.search_bar_height = 25
+        self.visible_rows = 0
+        self.active = False
+        self.selected_machine = None
+        self.hover = False
+        self.hovering_pos = (0, 0)
+        self.sidebar_width = 200
+
+        # Predefined craft button
+        self.craft_button = UIButton(
+            rect=pg.Rect(0, 0, 120, 30),
+            text="Craft",
+            callback=self.craft_selected_machine,
+            bg_color=(60, 100, 60),
+            hover_color=(80, 120, 80)
+        )
+        # self.craft_button.parent = self
+
+    def resize_to_parent(self):
+        if not self.parent:
+            return
+        parent_rect = self.parent.rect
+        self.rect = pg.Rect(5, 30, parent_rect.width - 10, parent_rect.height - 35)
+        self.visible_rows = (self.rect.height - self.search_bar_height - 5) // self.row_height
+        self.search_bar_rect = pg.Rect(self.rect.x + 5, self.rect.y + 5, self.rect.width - 10, 20)
+
+    def handle_event(self, event):
+        self.craft_button.handle_event(event)
+
+        if event.type == pg.MOUSEBUTTONDOWN:
+            self.active = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
+            if self.active and event.button == 3:
+                self.search_query = ""
+
+            for i, machine in enumerate(self.filtered_machines()[self.scroll_offset // self.row_height :]):
+                row_rect = self.global_rect(pg.Rect(
+                    self.rect.x + 5, self.rect.y + 30 + i * self.row_height,
+                    self.rect.width - self.sidebar_width - 20, self.row_height - 2
+                ))
+                if row_rect.collidepoint(event.pos):
+                    self.selected_machine = machine
+                    break
+
+        elif event.type == pg.KEYDOWN and self.active:
+            if event.key == pg.K_BACKSPACE:
+                self.search_query = self.search_query[:-1]
+            elif event.key == pg.K_RETURN:
+                self.active = False
+            elif event.unicode.isprintable():
+                self.search_query += event.unicode
+
+        elif event.type == pg.MOUSEWHEEL:
+            self.scroll_offset -= event.y * self.row_height
+            max_offset = max(0, len(self.filtered_machines()) - self.visible_rows) * self.row_height
+            self.scroll_offset = max(0, min(self.scroll_offset, max_offset))
+
+        elif event.type == pg.MOUSEMOTION:
+            self.hover = self.global_rect().collidepoint(event.pos)
+            if self.hover:
+                self.hovering_pos = event.pos
+
+    def filtered_machines(self):
+        return [
+            mtype for mtype in self.game.machine_registry
+            if self.search_query.lower() in mtype.name.lower()
+        ]
+
+    def draw_self(self, surface):
+        pg.draw.rect(surface, (25, 25, 25), self.global_rect(), border_radius=5)
+
+        # Draw search bar
+        search_rect = self.global_rect(self.search_bar_rect)
+        pg.draw.rect(surface, (40, 40, 40), search_rect)
+        pg.draw.rect(surface, (90, 90, 90), search_rect, 2)
+        text = self.search_query if (self.active or self.search_query) else "Search..."
+        search_text = self.font.render(text, True, (200, 200, 200))
+        surface.blit(search_text, search_rect.move(5, 2))
+
+        # Draw filtered machine list
+        machines = self.filtered_machines()
+        start = self.scroll_offset // self.row_height
+        end = min(start + self.visible_rows, len(machines))
+        display = machines[start:end]
+
+        for i, mtype in enumerate(display):
+            y = self.rect.y + 30 + i * self.row_height
+            self.draw_machine_row(surface, mtype, y)
+
+        # Sidebar
+        self.draw_sidebar(surface)
+
+    def draw_machine_row(self, surface, mtype, y):
+        row_rect = self.global_rect(pg.Rect(
+            self.rect.x + 5, y, self.rect.width - self.sidebar_width - 20, self.row_height - 2
+        ))
+        color = (60, 60, 60) if not (self.hover and row_rect.collidepoint(self.hovering_pos)) else (70, 70, 70)
+        pg.draw.rect(surface, color, row_rect)
+
+        text = self.font.render(mtype.name.title(), True, (255, 255, 255))
+        surface.blit(text, (row_rect.x + 10, row_rect.y + 10))
+
+    def draw_sidebar(self, surface):
+        sidebar_rect = self.global_rect(pg.Rect(
+            self.rect.right - self.sidebar_width, self.rect.y + 5,
+            self.sidebar_width - 5, self.rect.height - 10
+        ))
+        pg.draw.rect(surface, (40, 40, 40), sidebar_rect, border_radius=5)
+
+        x = sidebar_rect.x + 10
+        y = sidebar_rect.y + 10
+
+        if self.selected_machine:
+            mtype = self.selected_machine
+            surface.blit(self.font.render(mtype.name.title(), True, (255, 255, 0)), (x, y))
+            y += 25
+
+            surface.blit(self.font.render("Cost:", True, (200, 200, 200)), (x, y))
+            y += 20
+            for item, amt in mtype.craft_cost.items():
+                surface.blit(self.font.render(f"{item}: {amt}", True, (180, 180, 180)), (x, y))
+                y += 18
+
+            y += 10
+            current = self.game.inventory_manager.global_inventory.get(mtype.name, 0)
+            surface.blit(self.font.render(f"Owned: {current}", True, (100, 255, 100)), (x, y))
+            y += 35
+
+            # Position and draw static craft button
+            self.craft_button.rect = pg.Rect(x, y, 120, 30)
+            self.craft_button.draw(surface)
+
+        else:
+            surface.blit(self.font.render("Select a machine", True, (150, 150, 150)), (x, y))
+
+    def craft_selected_machine(self):
+        if not self.selected_machine:
+            return
+        if self.game.inventory_manager.can_craft(self.selected_machine):
+            self.game.inventory_manager.craft(self.selected_machine)
+
 class UIManager:
     def __init__(self):
         self.game: "Game"
@@ -316,6 +464,9 @@ class UIManager:
         
         self.inv_panel = UIInventoryPanel(self.game)
         self.windows[0].add_child(self.inv_panel)
+        
+        self.crafting_panel = UICraftingPanel(self.game)
+        self.windows[1].add_child(self.crafting_panel)
         
         self.tooltip = UIMachineTooltip(self.game)
         self.elements.append(self.tooltip)
