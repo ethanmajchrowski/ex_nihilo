@@ -15,7 +15,7 @@ from core.systems.camera import Camera
 
 from core.entities.node import IONode
 from core.entities.conveyor import Conveyor
-from core.entities.machine import Machine
+from core.entities.machine import Machine, create_machine
 from core.entities.machines.machine_types import ROCK_CRUSHER, IMPORTER, MINESHAFT
 
 from util.algorithms import lines_intersect
@@ -37,7 +37,7 @@ class GameState:
         class tools:
             def __init__(self) -> None:
                 self.REMOVE_CONVEYORS: bool = False
-                self.PLACING_CONVEYORS: bool = False
+                self.PLACING_CONVEYORS: bool = True
                 self.PLACING_MACHINE: bool = False
         
         self.tools = tools()
@@ -66,13 +66,15 @@ class Game:
         self.ui_manager.game = self
         self.ui_manager.create_ui()
         
-        
-        self.add_world_object(Machine((200, 200), ROCK_CRUSHER, rotation=2))
-        self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager], rotation=2))
-        self.add_world_object(Machine((500, 450), IMPORTER, [self.inventory_manager], rotation=2))
-        self.add_world_object(Machine((800, 200), MINESHAFT))
-        self.add_world_object(Machine((800, 250), MINESHAFT))
-        
+        self.add_world_object(create_machine(ROCK_CRUSHER, (200, 200), rotation=2))
+        self.state.world_objects[-1].set_active_recipe(c.RECIPE_DB.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
+        print(self.state.world_objects[-1].active_recipe.inputs, self.state.world_objects[-1].active_recipe.outputs)
+        self.add_world_object(create_machine(IMPORTER, (500, 400), contexts=[self.inventory_manager], rotation=2))
+        self.add_world_object(create_machine(IMPORTER, (500, 450), contexts=[self.inventory_manager], rotation=2))
+        self.add_world_object(create_machine(MINESHAFT, (800, 200)))
+        self.state.world_objects[-1].set_active_recipe(c.RECIPE_DB.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
+        self.add_world_object(create_machine(MINESHAFT, (800, 250)))
+        self.state.world_objects[-1].set_active_recipe(c.RECIPE_DB.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
         
         for i in range(50):
             self.inventory_manager.collect_item(self.inventory_manager.global_inventory, f"zBlank {i}")

@@ -4,7 +4,7 @@ from core.entities.node import NodeType
 def importer_update(machine: Machine, dt):
     inv_mgr = machine.contexts[0]
 
-    if machine.progress < machine.mtype.recipes[machine.selected_recipe_index].duration:
+    if machine.progress < machine.mtype.custom_data["process_duration"]:
         machine.progress += dt
     else:
         machine.progress = 0.0

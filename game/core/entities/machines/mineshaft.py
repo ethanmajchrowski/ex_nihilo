@@ -1,8 +1,11 @@
-from core.entities.machine import Machine
+from core.entities.machine import RecipeMachine
 from core.entities.node import NodeType
 
-def mineshaft_update(machine: Machine, dt):
-    recipe = machine.mtype.recipes[machine.selected_recipe_index]
+def mineshaft_update(machine: RecipeMachine, dt):
+    recipe = machine.active_recipe
+    if recipe is None:
+        return
+    
     if machine.progress < recipe.duration:
         machine.progress += dt
     else:

@@ -11,3 +11,6 @@ BASE_MACHINE_SIZE = (BASE_MACHINE_WIDTH, BASE_MACHINE_HEIGHT)
 
 CONVEYOR_INACTIVE_COLOR = (1, 0, 87)
 CONVEYOR_ACTIVE_COLOR = (2, 0, 108)
+
+from core.systems.recipe import setup_recipes
+RECIPE_DB = setup_recipes()

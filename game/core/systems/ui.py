@@ -1,7 +1,7 @@
 import pygame as pg
 import config.configuration as c
 
-from core.entities.machine import Machine
+from core.entities.machine import Machine, RecipeMachine
 from core.entities.node import IONode, NodeType
 
 from typing import TYPE_CHECKING, List
@@ -246,17 +246,20 @@ class UIMachineTooltip(UIElement):
         pg.draw.rect(surface, (25, 25, 25), self.global_rect(), border_radius=5)
         pg.draw.rect(surface, (80, 80, 80), self.global_rect(), 1, border_radius=5)
         
-        recipe = self.machine.mtype.recipes[self.machine.selected_recipe_index]
+        recipe, progress_text, recipe_text = None, None, None
+        if isinstance(self.machine, RecipeMachine) and self.machine.active_recipe is not None:
+            recipe = self.machine.active_recipe
 
-        recipe_text = ""
-        if recipe.inputs and recipe.outputs:
-            recipe_text = f"> {recipe.inputs} -> {recipe.outputs} ({recipe.duration}s)"
-        elif recipe.inputs and not recipe.outputs:
-            recipe_text = f"> Collecting {recipe.inputs} ({recipe.duration}s)"
-        elif recipe.outputs and not recipe.inputs:
-            recipe_text = f"> Generating {recipe.outputs} ({recipe.duration}s)"
-        else:
-            recipe_text = f"> Misc recipe ({recipe.duration}s)"
+            if recipe.inputs and recipe.outputs:
+                recipe_text = f"> {recipe.inputs} -> {recipe.outputs} ({recipe.duration}s)"
+            elif recipe.inputs and not recipe.outputs:
+                recipe_text = f"> Collecting {recipe.inputs} ({recipe.duration}s)"
+            elif recipe.outputs and not recipe.inputs:
+                recipe_text = f"> Generating {recipe.outputs} ({recipe.duration}s)"
+            else:
+                recipe_text = f"> Misc recipe ({recipe.duration}s)"
+            
+            progress_text = f"> Progress: {int((self.machine.progress/recipe.duration) * 100)}%"
 
         input_nodes = {}
         output_nodes = {}
@@ -269,13 +272,17 @@ class UIMachineTooltip(UIElement):
         lines = [
             f"{self.machine.mtype.name}",
             recipe_text,
-            f"> Progress: {int((self.machine.progress/recipe.duration) * 100)}%",
+            progress_text, 
             f"> I/O: {input_nodes} / {output_nodes}"
         ]
 
-        for i, text in enumerate(lines):
+        i = 0
+        for text in lines:
+            if text is None:
+                continue
             txt_surf = self.font.render(text, True, (255, 255, 255))
             surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 8 + i * 20))
+            i += 1
 
 class UIManager:
     def __init__(self):
