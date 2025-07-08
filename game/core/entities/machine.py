@@ -16,7 +16,8 @@ class Recipe:
 class MachineType:
     def __init__(self, name: str, recipes: list[Recipe], 
                  nodes: list[tuple[str, tuple[float, float], Node.NodeType, int, float]],
-                 asset_info: dict, custom_update: None | Callable = None, supports_rotation = True):
+                 asset_info: dict, craft_cost: dict, custom_update: None | Callable = None,
+                 supports_rotation = True):
         """
         nodes [(kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
                  capacity: int = 16, transfer_interval = 0.1), ...]
@@ -27,6 +28,7 @@ class MachineType:
         self.asset_info = asset_info  # {"image": "asset/machine/rock_crusher.png", "frames": 1}
         self.custom_update = custom_update  # Optional function for specialized behavior
         self.supports_rotation = supports_rotation
+        self.craft_cost = craft_cost
 
 class Machine:
     def __init__(self, pos, mtype: MachineType, contexts: list | None = None,

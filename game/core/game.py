@@ -68,8 +68,8 @@ class Game:
         
         
         self.add_world_object(Machine((200, 200), ROCK_CRUSHER, rotation=2))
-        self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager]))
-        self.add_world_object(Machine((500, 450), IMPORTER, [self.inventory_manager]))
+        self.add_world_object(Machine((500, 400), IMPORTER, [self.inventory_manager], rotation=2))
+        self.add_world_object(Machine((500, 450), IMPORTER, [self.inventory_manager], rotation=2))
         self.add_world_object(Machine((800, 200), MINESHAFT))
         self.add_world_object(Machine((800, 250), MINESHAFT))
         
