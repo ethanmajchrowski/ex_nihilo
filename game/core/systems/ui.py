@@ -316,7 +316,7 @@ class UICraftingPanel(UIElement):
         parent_rect = self.parent.rect
         self.rect = pg.Rect(5, 30, parent_rect.width - 10, parent_rect.height - 35)
         self.visible_rows = (self.rect.height - self.search_bar_height - 5) // self.row_height
-        self.search_bar_rect = pg.Rect(self.rect.x + 5, self.rect.y + 5, self.rect.width - 10, 20)
+        self.search_bar_rect = pg.Rect(self.rect.x + 5, self.rect.y + 5, self.rect.width - 10 - self.sidebar_width, 20)
 
     def handle_event(self, event):
         self.craft_button.handle_event(event)
@@ -385,7 +385,7 @@ class UICraftingPanel(UIElement):
 
     def draw_machine_row(self, surface, mtype, y):
         row_rect = self.global_rect(pg.Rect(
-            self.rect.x + 5, y, self.rect.width - self.sidebar_width - 20, self.row_height - 2
+            self.rect.x + 5, y, self.rect.width - self.sidebar_width - 10, self.row_height - 2
         ))
         color = (60, 60, 60) if not (self.hover and row_rect.collidepoint(self.hovering_pos)) else (70, 70, 70)
         pg.draw.rect(surface, color, row_rect)
