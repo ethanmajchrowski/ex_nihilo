@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from core.entities.node import IONode, NodeType
 from core.entities.conveyor import Conveyor
-from core.entities.machine import Machine
+from core.entities.machine import Machine, create_machine
 
 from logger import logger
 
@@ -23,9 +23,17 @@ class InputManager:
         if event.type == pg.KEYDOWN:            self.handle_key_down(event)
 
     def handle_key_down(self, event):
+        mod = pg.key.get_mods()
         if event.key == pg.K_DELETE: 
             self.game.state.tools.REMOVE_CONVEYORS = not self.game.state.tools.REMOVE_CONVEYORS
             print("Removing conveyors" if self.game.state.tools.REMOVE_CONVEYORS else "No longer removing conveyors")
+        if event.key == pg.K_r:
+            if self.game.state.tools.PLACING_MACHINE:
+                if mod % pg.KMOD_SHIFT:
+                    self.game.state.selected_rot -= 1
+                else:
+                    self.game.state.selected_rot += 1
+                # print(self.game.state.selected_rot)
 
     def handle_mouse_motion(self, event):
         if not self.mouse_valid_pos(event.pos):
@@ -70,12 +78,26 @@ class InputManager:
                     logger.info('Started conveyor')
             
             if selected_obj is None:
-                if not self.game.state.tools.REMOVE_CONVEYORS:
+                if not self.game.state.tools.any_tool():
                     self.game.state.dragging_camera = True
                 
+                #* Start conveyor cutting
                 if self.game.state.tools.REMOVE_CONVEYORS and not self.game.state.removing_conveyors:
                     print("starting to cut conveyor")
                     self.game.state.removing_conveyors = event.pos
+                
+                #* Place machine
+                if self.game.state.tools.PLACING_MACHINE:
+                    assert self.game.state.selected_placing is not None
+                    pos = self.game.camera.screen_to_world(event.pos)
+                    self.game.add_world_object(create_machine(self.game.state.selected_placing, pos, rotation=self.game.state.selected_rot))
+                    self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] -= 1
+                    if self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] <= 0:
+                        self.game.state.tools.PLACING_MACHINE = False
+        
+        if event.button == 3:
+            if self.game.state.tools.PLACING_MACHINE:
+                self.game.state.tools.PLACING_MACHINE = False
             
             # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
 
@@ -116,7 +138,7 @@ class InputManager:
             if self.game.state.tools.REMOVE_CONVEYORS and self.game.state.removing_conveyors:
                 print('done cutting conveyor')
                 self.game.remove_conveyors(self.game.state.removing_conveyors, event.pos)
-                self.game.state.removing_conveyors = False
+                self.game.state.removing_conveyors = ()
     
         self.handle_mouse_motion(event)
 

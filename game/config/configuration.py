@@ -12,5 +12,14 @@ BASE_MACHINE_SIZE = (BASE_MACHINE_WIDTH, BASE_MACHINE_HEIGHT)
 CONVEYOR_INACTIVE_COLOR = (1, 0, 87)
 CONVEYOR_ACTIVE_COLOR = (2, 0, 108)
 
-from core.systems.recipe import setup_recipes
-RECIPE_DB = setup_recipes()
+from core.systems.registry import DataRegistry, ItemData
+REGISTRY = DataRegistry()
+RECIPE_REGISTRY = REGISTRY.recipes
+
+REGISTRY.register_item(ItemData("stone", ["can_deposit"]))
+REGISTRY.register_item(ItemData("gravel", ["can_deposit"]))
+
+import core.entities.machines.machine_types as mtypes
+REGISTRY.register_machine(mtypes.IMPORTER)
+REGISTRY.register_machine(mtypes.MINESHAFT)
+REGISTRY.register_machine(mtypes.ROCK_CRUSHER)

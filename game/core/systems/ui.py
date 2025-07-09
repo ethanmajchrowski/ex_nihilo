@@ -95,7 +95,8 @@ class UILabel(UIElement):
         surface.blit(text_surf, rect)
 
 class UIButton(UIElement):
-    def __init__(self, rect, text, callback=None, bg_color=(60, 60, 60), hover_color=(80, 80, 80), text_color=(255, 255, 255)):
+    def __init__(self, rect, text, callback=None, bg_color=(60, 60, 60), hover_color=(80, 80, 80), text_color=(255, 255, 255),
+                 clickable = True, disabled_color=(40, 40, 40)):
         super().__init__(rect)
         self.text = text
         self.callback = callback
@@ -104,15 +105,21 @@ class UIButton(UIElement):
         self.text_color = text_color
         self.hover = False
         self.font = pg.font.SysFont("Arial", 16)
+        self.clickable = clickable
+        self.disabled_color = disabled_color
 
     def draw_self(self, surface):
         rect = self.global_rect()
         color = self.hover_color if self.hover else self.bg_color
+        if not self.clickable:
+            color = self.disabled_color
         pg.draw.rect(surface, color, rect, border_radius=5)
         text_surf = self.font.render(self.text, True, self.text_color)
         surface.blit(text_surf, text_surf.get_rect(center=rect.center))
 
     def handle_event(self, event):
+        if not self.clickable:
+            return
         rect = self.global_rect()
         if event.type == pg.MOUSEMOTION:
             self.hover = rect.collidepoint(event.pos)
@@ -120,6 +127,34 @@ class UIButton(UIElement):
             if rect.collidepoint(event.pos) and self.callback:
                 self.callback()
         super().handle_event(event)
+
+class UIToggleButton(UIButton):
+    def __init__(self, rect, text, callback=None, bg_color=(60, 60, 60), hover_color=(80, 80, 80), text_color=(255, 255, 255),
+                 active_color=(100, 100, 100)):
+        super().__init__(rect, text, callback, bg_color, hover_color, text_color)
+        self.state = False
+        self.active_color = active_color
+        
+    def handle_event(self, event):
+        rect = self.global_rect()
+        if event.type == pg.MOUSEMOTION:
+            self.hover = rect.collidepoint(event.pos)
+        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if rect.collidepoint(event.pos):
+                self.state = not self.state
+                if self.callback:
+                    self.callback()
+    
+    def draw_self(self, surface):
+        rect = self.global_rect()
+        # color = self.hover_color if self.hover else self.bg_color
+        if self.hover:      color = self.hover_color
+        elif self.state:    color = self.active_color
+        else:               color = self.bg_color
+        
+        pg.draw.rect(surface, color, rect, border_radius=5)
+        text_surf = self.font.render(self.text, True, self.text_color)
+        surface.blit(text_surf, text_surf.get_rect(center=rect.center))
 
 class UIInventoryPanel(UIElement):
     def __init__(self, game: "Game"):
@@ -135,6 +170,48 @@ class UIInventoryPanel(UIElement):
         
         self.hover = False
         self.hovering_pos = (0, 0)
+        
+        self.row_buttons: dict[str, list[UIButton]] = {}
+    
+    def get_buttons_for_item(self, item_name: str) -> list[UIButton]:
+        buttons: list[UIButton] = []
+        
+        if item_name in c.REGISTRY.machines:
+            buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Craft", callback=lambda: self.open_craft_panel(item_name), bg_color=(50, 50, 50)))
+            buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_machine(item_name), bg_color=(50, 50, 50)))
+        
+        buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Info", callback=lambda: self.show_item_info(item_name), bg_color=(50, 50, 50)))
+        
+        if (item_name in c.REGISTRY.items 
+                and self.game.inventory_manager.global_inventory.get(item_name, 0) > 0
+                and c.REGISTRY.get_item(item_name).is_tagged("can_deposit")):
+            buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_machine(item_name), bg_color=(50, 50, 50)))
+        
+        return buttons
+    
+    def open_craft_panel(self, item_name: str):
+        assert self.parent is not None
+        self.parent.visible = False
+        self.game.ui_manager.windows[1].visible = True
+        crafting_panel = self.game.ui_manager.windows[1].children[1]
+        assert isinstance(crafting_panel, UICraftingPanel)
+        crafting_panel.selected_machine = c.REGISTRY.get_machine(item_name)
+    
+    def place_machine(self, item_name: str):
+        machine = c.REGISTRY.get_machine(item_name)
+        assert machine is not None
+        assert self.parent is not None
+        print(f"place {machine.name}")
+        self.parent.visible = False
+        self.game.state.selected_placing = machine
+        self.game.state.tools.PLACING_MACHINE = True
+        self.game.state.selected_rot = 0
+    
+    def show_item_info(self, item_name: str):
+        pass
+    
+    def deposit_item(self, item_name: str):
+        pass
     
     def resize_to_parent(self):
         print(self.rect)
@@ -146,6 +223,10 @@ class UIInventoryPanel(UIElement):
         self.search_bar_rect = pg.Rect(self.rect.x + 5, self.rect.y + 5, self.rect.width - 10, 20)
 
     def handle_event(self, event):
+        for button_row in self.row_buttons.values():
+            for button in button_row:
+                button.handle_event(event)
+
         if event.type == pg.MOUSEBUTTONDOWN:
             self.active = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
             if self.active and event.button == 3:
@@ -215,6 +296,17 @@ class UIInventoryPanel(UIElement):
         text = f"{name.title()}: {amount}"
         label = self.font.render(text, True, (255, 255, 255))
         surface.blit(label, (rect.x + 40, rect.y + 10))
+        
+        # Row Buttons
+        if name not in self.row_buttons:
+            self.row_buttons[name] = self.get_buttons_for_item(name)
+        
+        buttons = self.row_buttons[name]
+        x = rect.right - len(buttons) * 70 + 5 * (len(buttons) - 1) - 5
+        for button in buttons:
+            button.rect.topleft = (x, rect.y + 5)
+            button.draw(surface)
+            x += button.rect.width + 5
 
 class UIMachineTooltip(UIElement):
     def __init__(self, game: "Game"):
@@ -333,6 +425,7 @@ class UICraftingPanel(UIElement):
                 ))
                 if row_rect.collidepoint(event.pos):
                     self.selected_machine = machine
+                    
                     break
 
         elif event.type == pg.KEYDOWN and self.active:
@@ -355,7 +448,7 @@ class UICraftingPanel(UIElement):
 
     def filtered_machines(self):
         return [
-            mtype for mtype in self.game.machine_registry
+            mtype for mtype in c.REGISTRY.machines.values()
             if self.search_query.lower() in mtype.name.lower()
         ]
 
@@ -388,6 +481,8 @@ class UICraftingPanel(UIElement):
             self.rect.x + 5, y, self.rect.width - self.sidebar_width - 10, self.row_height - 2
         ))
         color = (60, 60, 60) if not (self.hover and row_rect.collidepoint(self.hovering_pos)) else (70, 70, 70)
+        if self.selected_machine == mtype:
+            color = (80, 80, 80)
         pg.draw.rect(surface, color, row_rect)
 
         text = self.font.render(mtype.name.title(), True, (255, 255, 255))
@@ -432,6 +527,58 @@ class UICraftingPanel(UIElement):
         if self.game.inventory_manager.can_craft(self.selected_machine):
             self.game.inventory_manager.craft(self.selected_machine)
 
+class UIHotbarButton(UIToggleButton):
+    def __init__(self, rect, text, bg_color=(60, 60, 60), hover_color=(80, 80, 80), text_color=(255, 255, 255), active_color=(100, 100, 100)):
+        super().__init__(rect, text, None, bg_color, hover_color, text_color, active_color)
+    
+    def handle_event(self, event):
+        rect = self.global_rect()
+        if event.type == pg.MOUSEMOTION:
+            self.hover = rect.collidepoint(event.pos)
+        elif event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if rect.collidepoint(event.pos):
+                self.state = not self.state
+                if self.callback:
+                    self.callback(self)
+
+class UIHotbar(UIElement):
+    def __init__(self, center_pos, visible=True):
+        self.rect = pg.Rect(0, 0, 0, 40)
+        self.center = center_pos
+        super().__init__(self.rect, visible)
+        self.buttons: list[UIHotbarButton] = []
+        self.active_button = -1
+        
+        self.width = 0
+    
+    def add_button(self, button: UIHotbarButton):
+        button.callback = self.button_callback
+        self.buttons.append(button)
+        self.add_child(button)
+        self.update_rect()
+    
+    def update_rect(self):
+        # assumes all buttons are the same width
+        self.width = 5
+        for i, button in enumerate(self.buttons):
+            # add width to background rect + 5 for padding
+            self.width += button.rect.w + 5
+            button.rect.top = 5
+            # set button position to 5 padding on left and right and then width of buttons
+            button.rect.x = 5*(i+1) + i*button.rect.w
+            # fix button positions
+        self.rect.w = self.width
+        self.rect.center = self.center
+        print("width: ", self.width)
+    
+    def draw_self(self, surface):
+        pg.draw.rect(surface, (50, 50, 50), self.rect, border_radius=5)
+    
+    def button_callback(self, button: UIHotbarButton):
+        for other_button in self.buttons:
+            if other_button is not button:
+                other_button.state = False
+
 class UIManager:
     def __init__(self):
         self.game: "Game"
@@ -470,6 +617,12 @@ class UIManager:
         
         self.tooltip = UIMachineTooltip(self.game)
         self.elements.append(self.tooltip)
+        
+        # self.hotbar = UIHotbar((c.DISPLAY_WIDTH_CENTER, c.DISPLAY_HEIGHT*0.9))
+        # self.elements.append(self.hotbar)
+        # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "PLACE"))
+        # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "LINK"))
+        # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "DELETE"))
 
     def add(self, element):
         self.elements.append(element)

@@ -1,6 +1,6 @@
 # renderer.py
 import pygame as pg
-from core.entities.machine import Machine
+from core.entities.machine import Machine, MachineType
 from core.entities.conveyor import Conveyor
 from core.entities.node import IONode
 import config.configuration as c
@@ -81,6 +81,11 @@ class Renderer:
                 surface.blit(bg_surface, (x, y))
                 # pg.draw.rect(surface, (0, 0, 0), pg.Rect(x, y, bg_w, bg_h), 5)
 
+    def make_transparent(self, image: pg.Surface, alpha: int = 128) -> pg.Surface:
+        image = image.convert_alpha()
+        transparent = image.copy()
+        transparent.fill((255, 255, 255, alpha), special_flags=pg.BLEND_RGBA_MULT)
+        return transparent
 
     def render(self, surface: pg.Surface, state: "GameState", 
                mouse_pos: tuple[int, int], asset_manager: AssetManager,
@@ -136,19 +141,21 @@ class Renderer:
                     if lines_intersect(obj.start_pos, obj.end_pos, camera.screen_to_world(mouse_pos), state.removing_conveyors):
                         pg.draw.aaline(surface, (255, 0, 100), camera.world_to_screen(obj.start_pos), camera.world_to_screen(obj.end_pos))
     
-        # Draw inventory counts
-        # hover_text = asset_manager.assets["fonts"]["inter_md"].render(
-        #     f"{len(state.hovering_obj)} {state.hovering_obj}", True, (255, 255, 255))
-        # surface.blit(hover_text, (10, 50))
-
-        # Hovering IONode inventory display
-        # if state.hovering_obj is not None and isinstance(state.hovering_obj, IONode):
-        #     contents_text = asset_manager.assets["fonts"]["inter"].render(
-        #         "\n".join(f"{k}: {v}" for k, v in state.hovering_obj.inventory.items()),
-        #         True, (255, 255, 255), (0, 0, 0)
-        #     )
-        #     surface.blit(contents_text, contents_text.get_rect(bottomleft=mouse_pos))
-
-        # Draw collection log overlay (not for now)
-        # if self.inventory_manager.collection_log:
-        #     self.draw_collection_overlay(surface)
+        # draw placing preivew
+        if state.tools.PLACING_MACHINE:
+            mtype = state.selected_placing
+            assert isinstance(mtype, MachineType)
+            r = pg.Rect((0, 0), c.BASE_MACHINE_SIZE)
+            r.center = mouse_pos
+            pg.draw.rect(surface, (100, 100, 100), r)
+            
+            # draw placing preivew nodes
+            for node in mtype.nodes:
+                offset = node[1]
+                if mtype.supports_rotation and state.selected_rot != 0:
+                    for _ in range(4-(state.selected_rot % 4)): # CW
+                        offset = (offset[1], offset[0]*-1)
+                
+                color = (0, 0, 255) if node[0] == "input" else (255, 153, 0)
+                pos = (mouse_pos[0]+c.BASE_MACHINE_WIDTH*offset[0]/2, mouse_pos[1]+c.BASE_MACHINE_HEIGHT*offset[1]/2)
+                pg.draw.circle(surface, color, pos, 5)

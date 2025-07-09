@@ -27,6 +27,14 @@
 
 # GOALS
 ## Short-term goals
+- [ ] **==== Recipe System Tweaks ====** 
+  - [ ] Multi-input/output
+    - [ ] ex. "inputs": {"water": 100, "ammonia": 50}, "conditions": {"heat": 500, "pressure": 1000}, "outputs": {"nitric_acid": 30}
+    - [ ] Support optional requirements: tiered machine, catalyst, environment
+  - [ ] Fluids, gases, energy
+  - [ ] Byproducts and chance-based outputs
+  - [ ] Multi-step intermediate chains
+  - [ ] Heat, pressure, catalyst variables
 - [ ] **==== Recipe Browser ====** 
     *goals: Let the player explore recipes easily, view input/output chains, and select for machine use.*
   - [ ] Create UIRecipeBrowserPanel like UIInventoryPanel
@@ -39,8 +47,8 @@
     - [ ] Optionally preview full chains of dependencies
 - [ ] **==== World Placement and Crafting ====**
     *Goals: Let the player craft and place machines in the world from inventory.*
-  - [ ] Show item count and cost in the crafting panel sidebar
-  - [ ] Add “Craft” button (already done)
+  - [x] Show item count and cost in the crafting panel sidebar
+  - [x] Add “Craft” button (already done)
   - [ ] Add PlacementManager to handle ghost machines
   - [ ] Show preview sprite
   - [ ] Allow rotating before placing
