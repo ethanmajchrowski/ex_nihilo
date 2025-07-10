@@ -366,6 +366,10 @@ class UIMachineTooltip(UIElement):
                 recipe_text = f"> Misc recipe ({recipe.duration}s)"
             
             progress_text = f"> Progress: {int((self.machine.progress/recipe.duration) * 100)}%"
+        elif "process_duration" in self.machine.mtype.custom_data:
+            process_duration = self.machine.mtype.custom_data["process_duration"]
+            recipe_text = f"> Misc recipe ({process_duration}s)"
+            progress_text = f"> Progress: {int((self.machine.progress/process_duration) * 100)}%"
 
         input_nodes = {}
         output_nodes = {}
