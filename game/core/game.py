@@ -30,7 +30,7 @@ class GameState:
         self.running = True
         self.dragging_camera = False
         
-        self.selected_placing: None | MachineType = None
+        self.selected_placing: Any = None
         self.selected_rot: int = 0
         
         self.removing_conveyors: tuple | tuple[int, int] = ()
@@ -42,6 +42,10 @@ class GameState:
                 self.PLACING_MACHINE: bool = False
             def any_tool(self) -> bool:
                 return self.REMOVE_CONVEYORS or self.PLACING_CONVEYORS or self.PLACING_MACHINE
+            def camera_restrict_tool(self) -> bool:
+                return self.PLACING_MACHINE
+            def any_placing_tool(self) -> bool:
+                return self.PLACING_CONVEYORS or self.PLACING_MACHINE
         
         self.tools = tools()
         
@@ -91,7 +95,7 @@ class Game:
         """Process all game events (input, quit, etc.)."""
         events = pg.event.get()
         keys = pg.key.get_pressed()
-        if not self.ui_manager.inv_panel.active:
+        if not self.ui_manager.inv_panel.active_search:
             if keys[pg.K_d]: self.camera.move(500*dt, 0)
             if keys[pg.K_a]: self.camera.move(-500*dt, 0)
             if keys[pg.K_w]: self.camera.move(0, -500*dt)
@@ -105,6 +109,8 @@ class Game:
     def update(self, dt: float) -> None:
         """Update game state."""
         # print('===== UPDATE =====')
+        self.ui_manager.placing_info.visible = self.state.tools.any_placing_tool()
+        
         if self.fps_update_time < 0.25:
             self.fps_update_time += dt
         else:

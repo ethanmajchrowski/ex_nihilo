@@ -16,6 +16,8 @@
   - [ ] machine UI
 - [ ] conveyors:
   - [x] allow conveyors to be chained together
+  - [ ] allow conveyors to be connected to the input nodes of other conveyors (i.e. two conveyors combining into one)
+    - [ ] allow conveyors to be placed without an input node
 - [ ] machines
   - [ ] add robust system to manually input and output items with machines
   - [ ] multiblock machines? connected machines that give others buffs/functionality?
@@ -49,15 +51,12 @@
     *Goals: Let the player craft and place machines in the world from inventory.*
   - [x] Show item count and cost in the crafting panel sidebar
   - [x] Add “Craft” button (already done)
-  - [ ] Add PlacementManager to handle ghost machines
   - [ ] Show preview sprite
-  - [ ] Allow rotating before placing
+  - [x] Allow rotating before placing
     - [ ] Validate placement (no overlap, valid terrain)
-  - [ ] On place: 
-    - [ ] Remove from global inventory
-    - [ ] Add to world objects and assign IONodes
-  - [ ] Snap belts to nearest nodes or grid
-    - [ ] (Optional) Undo/confirm placement toggle
+  - [x] On place: 
+    - [x] Remove from global inventory
+    - [x] Add to world objects and assign IONodes
 - [ ] **Energy System Prototype**
     *Goals: Basic power production and consumption system, visible and functional.*
   - [ ] Define NodeType.ENERGY and support in IONodes

@@ -7,7 +7,8 @@ if TYPE_CHECKING:
 
 from core.entities.node import IONode, NodeType
 from core.entities.conveyor import Conveyor
-from core.entities.machine import Machine, create_machine
+from core.entities.machine import Machine, create_machine, MachineType
+from core.systems.registry import TransportType
 
 from logger import logger
 
@@ -73,12 +74,12 @@ class InputManager:
         if event.button == 1:
             if isinstance(selected_obj, IONode):
                 # if placing conveyor and hovering over output node
-                if selected_obj.kind == "output" and self.game.state.tools.PLACING_CONVEYORS: 
+                if selected_obj.kind == "output" and self.game.state.tools.PLACING_CONVEYORS:
+                    assert isinstance(self.game.state.selected_placing, TransportType)
                     self.game.state.conveyor_start = selected_obj
-                    logger.info('Started conveyor')
             
             if selected_obj is None:
-                if not self.game.state.tools.any_tool():
+                if not self.game.state.tools.camera_restrict_tool():
                     self.game.state.dragging_camera = True
                 
                 #* Start conveyor cutting
@@ -88,7 +89,7 @@ class InputManager:
                 
                 #* Place machine
                 if self.game.state.tools.PLACING_MACHINE:
-                    assert self.game.state.selected_placing is not None
+                    assert isinstance(self.game.state.selected_placing, MachineType)
                     pos = self.game.camera.screen_to_world(event.pos)
                     self.game.add_world_object(create_machine(self.game.state.selected_placing, pos, rotation=self.game.state.selected_rot))
                     self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] -= 1
@@ -98,6 +99,8 @@ class InputManager:
         if event.button == 3:
             if self.game.state.tools.PLACING_MACHINE:
                 self.game.state.tools.PLACING_MACHINE = False
+            if self.game.state.tools.PLACING_CONVEYORS:
+                self.game.state.tools.PLACING_CONVEYORS = False
             
             # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
 
@@ -106,30 +109,36 @@ class InputManager:
         if not self.mouse_valid_pos(event.pos) and self.game.state.conveyor_start is not None:
             self.game.state.conveyor_start = None
         
+        #* Create conveyor
         if self.game.state.conveyor_start is not None:
-            new_conveyor: Conveyor | None = None
+            assert isinstance(self.game.state.selected_placing, TransportType)
+            new_transport_link: Conveyor | None = None
             if (self.game.state.hovering_obj 
                 and isinstance(self.game.state.hovering_obj[0], IONode) 
                 and self.game.state.hovering_obj[0].kind == "input"):
                 
-                # TODO: do not allow conveyors with identical start and end nodes
                 # TODO: should conveyors be able to feel back into the same machine's input?
-                new_conveyor = Conveyor (
-                        self.game.state.conveyor_start, 
-                        self.game.state.hovering_obj[0], 
-                        self.game.inventory_manager
+                new_transport_link = self.game.state.selected_placing.create(
+                        input_node=self.game.state.conveyor_start, 
+                        output_node=self.game.state.hovering_obj[0], 
+                        inventory_manager=self.game.inventory_manager
                 )
             elif self.game.state.hovering_obj == []:
-                new_conveyor = Conveyor(
+                new_transport_link = self.game.state.selected_placing.create(
                         self.game.state.conveyor_start,
                         pos,
                         self.game.inventory_manager
                     )
-            if new_conveyor:
-                self.game.add_world_object(new_conveyor)
+            
+            if new_transport_link:
+                self.game.add_world_object(new_transport_link)
+                self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] -= 1
+                if self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] <= 0:
+                    self.game.state.tools.PLACING_CONVEYORS = False
+                    logger.info("Done placing conveyors")
                 if isinstance(self.game.state.conveyor_start.host, Conveyor) and not self.game.state.conveyor_start.connected_nodes:
-                    self.game.state.conveyor_start.connected_nodes.append(new_conveyor.input_node)
-                logger.info('Finished conveyor')
+                    self.game.state.conveyor_start.connected_nodes.append(new_transport_link.input_node)
+                logger.info(f'Placed {self.game.state.selected_placing.name}')
             
             self.game.state.conveyor_start = None
         else:

@@ -4,6 +4,8 @@ from typing import Literal
 from typing import Any
 
 from core.entities.conveyor import Conveyor
+from core.entities.node import IONode
+from core.systems.inventory import InventoryManager
 
 class ItemData:
     def __init__(self, name: str, craft_cost: dict[str, int] = {}, tags=None) -> None:
@@ -19,12 +21,18 @@ class TransportType:
         self.name = name
         self.craft_cost = craft_cost
         self.constructor_class = constructor_class
+    
+    def create(self, input_node: IONode, output_node: IONode | tuple[int, int], inventory_manager: InventoryManager):
+        raise NotImplementedError
 
 class ConveyorType(TransportType):
     def __init__(self, name: str, craft_cost: dict[str, int], speed: int, item_spacing: int = 15) -> None:
         super().__init__(name, craft_cost, Conveyor)
         self.speed = speed
         self.item_spacing = item_spacing
+    
+    def create(self, input_node: IONode, output_node: IONode | tuple[int, int], inventory_manager: InventoryManager) -> Conveyor:
+        return Conveyor(input_node, output_node, inventory_manager, self.speed, self.item_spacing)
 
 class PipeType(TransportType):
     def __init__(self, name: str, craft_cost: dict[str, int], constructor_class: Any) -> None:
@@ -61,7 +69,7 @@ class DataRegistry:
         self.recipes.register(recipe)
 
     def get_item(self, name: str) -> ItemData:
-        return self.items[name]
+        return self.all_items[name]
 
     def get_machine(self, name: str) -> MachineType:
         return self.machines[name]
@@ -77,3 +85,6 @@ class DataRegistry:
                 craftable[item] = self.all_items[item]
         
         return craftable
+    
+    def is_craftable(self, item_name: str) -> bool:
+        return hasattr(self.all_items[item_name], "craft_cost") and self.all_items[item_name].craft_cost

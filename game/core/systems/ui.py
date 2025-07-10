@@ -3,8 +3,9 @@ import config.configuration as c
 
 from core.entities.machine import Machine, RecipeMachine
 from core.entities.node import IONode, NodeType
+from logger import logger
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Any
 if TYPE_CHECKING:
     from core.game import Game
 
@@ -133,7 +134,7 @@ class UIToggleButton(UIButton):
                  active_color=(100, 100, 100)):
         super().__init__(rect, text, callback, bg_color, hover_color, text_color)
         self.state = False
-        self.active_color = active_color
+        self.active_search_color = active_color
         
     def handle_event(self, event):
         rect = self.global_rect()
@@ -149,7 +150,7 @@ class UIToggleButton(UIButton):
         rect = self.global_rect()
         # color = self.hover_color if self.hover else self.bg_color
         if self.hover:      color = self.hover_color
-        elif self.state:    color = self.active_color
+        elif self.state:    color = self.active_search_color
         else:               color = self.bg_color
         
         pg.draw.rect(surface, color, rect, border_radius=5)
@@ -166,7 +167,7 @@ class UIInventoryPanel(UIElement):
         self.row_height = 40
         self.visible_rows = 0
         self.search_bar_height = 25
-        self.active = False
+        self.active_search = False
         
         self.hover = False
         self.hovering_pos = (0, 0)
@@ -176,16 +177,21 @@ class UIInventoryPanel(UIElement):
     def get_buttons_for_item(self, item_name: str) -> list[UIButton]:
         buttons: list[UIButton] = []
         
-        if item_name in c.REGISTRY.machines:
+        if c.REGISTRY.is_craftable(item_name):
             buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Craft", callback=lambda: self.open_craft_panel(item_name), bg_color=(50, 50, 50)))
+        
+        if item_name in c.REGISTRY.machines:
             buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_machine(item_name), bg_color=(50, 50, 50)))
         
         buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Info", callback=lambda: self.show_item_info(item_name), bg_color=(50, 50, 50)))
         
         if (item_name in c.REGISTRY.items 
-                and self.game.inventory_manager.global_inventory.get(item_name, 0) > 0
-                and c.REGISTRY.get_item(item_name).is_tagged("can_deposit")):
-            buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_machine(item_name), bg_color=(50, 50, 50)))
+                and self.game.inventory_manager.global_inventory.get(item_name, 0) > 0):
+            if c.REGISTRY.get_item(item_name).is_tagged("can_deposit"):
+                buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_machine(item_name), bg_color=(50, 50, 50)))
+        
+        if item_name in c.REGISTRY.transport:
+            buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_transport(item_name), bg_color=(50, 50, 50)))
         
         return buttons
     
@@ -195,17 +201,25 @@ class UIInventoryPanel(UIElement):
         self.game.ui_manager.windows[1].visible = True
         crafting_panel = self.game.ui_manager.windows[1].children[1]
         assert isinstance(crafting_panel, UICraftingPanel)
-        crafting_panel.selected_machine = c.REGISTRY.get_machine(item_name)
+        crafting_panel.selected_object = c.REGISTRY.get_item(item_name)
     
     def place_machine(self, item_name: str):
         machine = c.REGISTRY.get_machine(item_name)
         assert machine is not None
         assert self.parent is not None
-        print(f"place {machine.name}")
+        logger.info(f"PLacing machine {machine.name}")
         self.parent.visible = False
         self.game.state.selected_placing = machine
         self.game.state.tools.PLACING_MACHINE = True
         self.game.state.selected_rot = 0
+    
+    def place_transport(self, item_name: str):
+        transport = c.REGISTRY.get_transport(item_name)
+        assert self.parent is not None
+        logger.info(f"Placing transport {transport.name}")
+        self.parent.visible = False
+        self.game.state.selected_placing = transport
+        self.game.state.tools.PLACING_CONVEYORS = True
     
     def show_item_info(self, item_name: str):
         pass
@@ -228,15 +242,15 @@ class UIInventoryPanel(UIElement):
                 button.handle_event(event)
 
         if event.type == pg.MOUSEBUTTONDOWN:
-            self.active = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
-            if self.active and event.button == 3:
+            self.active_search = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
+            if self.active_search and event.button == 3:
                 self.search_query = ""
 
-        elif event.type == pg.KEYDOWN and self.active:
+        elif event.type == pg.KEYDOWN and self.active_search:
             if event.key == pg.K_BACKSPACE:
                 self.search_query = self.search_query[:-1]
             elif event.key == pg.K_RETURN:
-                self.active = False
+                self.active_search = False
             elif event.unicode.isprintable():
                 self.search_query += event.unicode
 
@@ -262,7 +276,7 @@ class UIInventoryPanel(UIElement):
         search_rect = self.global_rect(self.search_bar_rect)
         pg.draw.rect(surface, (40, 40, 40), search_rect)
         pg.draw.rect(surface, (90, 90, 90), search_rect, 2)
-        text = self.search_query if (self.active or self.search_query) else "Search..."
+        text = self.search_query if (self.active_search or self.search_query) else "Search..."
         search_text = self.font.render(text, True, (200, 200, 200))
         surface.blit(search_text, search_rect.move(5, 2))
 
@@ -386,8 +400,8 @@ class UICraftingPanel(UIElement):
         self.row_height = 40
         self.search_bar_height = 25
         self.visible_rows = 0
-        self.active = False
-        self.selected_machine = None
+        self.active_search = False
+        self.selected_object: Any = None
         self.hover = False
         self.hovering_pos = (0, 0)
         self.sidebar_width = 200
@@ -414,8 +428,8 @@ class UICraftingPanel(UIElement):
         self.craft_button.handle_event(event)
 
         if event.type == pg.MOUSEBUTTONDOWN:
-            self.active = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
-            if self.active and event.button == 3:
+            self.active_search = self.global_rect(self.search_bar_rect).collidepoint(event.pos)
+            if self.active_search and event.button == 3:
                 self.search_query = ""
 
             for i, machine in enumerate(self.filtered_machines()[self.scroll_offset // self.row_height :]):
@@ -424,15 +438,15 @@ class UICraftingPanel(UIElement):
                     self.rect.width - self.sidebar_width - 20, self.row_height - 2
                 ))
                 if row_rect.collidepoint(event.pos):
-                    self.selected_machine = machine
+                    self.selected_object = machine
                     
                     break
 
-        elif event.type == pg.KEYDOWN and self.active:
+        elif event.type == pg.KEYDOWN and self.active_search:
             if event.key == pg.K_BACKSPACE:
                 self.search_query = self.search_query[:-1]
             elif event.key == pg.K_RETURN:
-                self.active = False
+                self.active_search = False
             elif event.unicode.isprintable():
                 self.search_query += event.unicode
 
@@ -452,16 +466,18 @@ class UICraftingPanel(UIElement):
             if self.search_query.lower() in item.name.lower()
         ]
 
-    def draw_self(self, surface):
+    def draw_self(self, surface: pg.Surface):
         pg.draw.rect(surface, (25, 25, 25), self.global_rect(), border_radius=5)
 
         # Draw search bar
         search_rect = self.global_rect(self.search_bar_rect)
-        pg.draw.rect(surface, (40, 40, 40), search_rect)
-        pg.draw.rect(surface, (90, 90, 90), search_rect, 2)
-        text = self.search_query if (self.active or self.search_query) else "Search..."
-        search_text = self.font.render(text, True, (200, 200, 200))
-        surface.blit(search_text, search_rect.move(5, 2))
+        pg.draw.rect(surface, color=(40, 40, 40), rect=search_rect)
+        pg.draw.rect(surface, color=(90, 90, 90), rect=search_rect, width=2)
+        
+        text = self.search_query if (self.active_search or self.search_query) else "Search..."
+        search_text = self.font.render(text, antialias=True, color=(200, 200, 200))
+        
+        surface.blit(source=search_text, dest=search_rect.move(5, 2))
 
         # Draw filtered machine list
         machines = self.filtered_machines()
@@ -481,7 +497,7 @@ class UICraftingPanel(UIElement):
             self.rect.x + 5, y, self.rect.width - self.sidebar_width - 10, self.row_height - 2
         ))
         color = (60, 60, 60) if not (self.hover and row_rect.collidepoint(self.hovering_pos)) else (70, 70, 70)
-        if self.selected_machine == mtype:
+        if self.selected_object == mtype:
             color = (80, 80, 80)
         pg.draw.rect(surface, color, row_rect)
 
@@ -498,15 +514,15 @@ class UICraftingPanel(UIElement):
         x = sidebar_rect.x + 10
         y = sidebar_rect.y + 10
 
-        if self.selected_machine:
-            mtype = self.selected_machine
+        if self.selected_object:
+            mtype = self.selected_object
             surface.blit(self.font.render(mtype.name.title(), True, (255, 255, 0)), (x, y))
             y += 25
 
             surface.blit(self.font.render("Cost:", True, (200, 200, 200)), (x, y))
             y += 20
             for item, amt in mtype.craft_cost.items():
-                surface.blit(self.font.render(f"{item}: {amt}", True, (180, 180, 180)), (x, y))
+                surface.blit(self.font.render(f"{item}: {self.game.inventory_manager.global_inventory[item]}/{amt}", True, (180, 180, 180)), (x, y))
                 y += 18
 
             y += 10
@@ -522,10 +538,10 @@ class UICraftingPanel(UIElement):
             surface.blit(self.font.render("Select a machine", True, (150, 150, 150)), (x, y))
 
     def craft_selected_machine(self):
-        if not self.selected_machine:
+        if not self.selected_object:
             return
-        if self.game.inventory_manager.can_craft(self.selected_machine):
-            self.game.inventory_manager.craft(self.selected_machine)
+        if self.game.inventory_manager.can_craft(self.selected_object):
+            self.game.inventory_manager.craft(self.selected_object)
 
 class UIHotbarButton(UIToggleButton):
     def __init__(self, rect, text, bg_color=(60, 60, 60), hover_color=(80, 80, 80), text_color=(255, 255, 255), active_color=(100, 100, 100)):
@@ -547,7 +563,7 @@ class UIHotbar(UIElement):
         self.center = center_pos
         super().__init__(self.rect, visible)
         self.buttons: list[UIHotbarButton] = []
-        self.active_button = -1
+        self.active_search_button = -1
         
         self.width = 0
     
@@ -578,6 +594,31 @@ class UIHotbar(UIElement):
         for other_button in self.buttons:
             if other_button is not button:
                 other_button.state = False
+
+class UIPlacingInfo(UIElement):
+    def __init__(self, game: "Game"):
+        self.rect = pg.Rect(0, 0, 200, 56)
+        self.rect.bottomright = (c.DISPLAY_WIDTH-10, c.DISPLAY_HEIGHT-10)
+        super().__init__(self.rect)
+        
+        self.game = game
+        self.font = pg.sysfont.SysFont("Arial", 16)
+    
+    def draw_self(self, surface):
+        pg.draw.rect(surface, (25, 25, 25), self.global_rect(), border_radius=5)
+        pg.draw.rect(surface, (80, 80, 80), self.global_rect(), 1, border_radius=5)
+        
+        txt_surf = self.font.render(
+        f"Placing {self.game.state.selected_placing.name}", 
+        antialias=True, 
+        color=(255, 255, 255))
+        surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 8))
+        
+        txt_surf = self.font.render(
+        f"{self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name]} left", 
+        antialias=True, 
+        color=(255, 255, 255))
+        surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 28))
 
 class UIManager:
     def __init__(self):
@@ -617,6 +658,9 @@ class UIManager:
         
         self.tooltip = UIMachineTooltip(self.game)
         self.elements.append(self.tooltip)
+        
+        self.placing_info = UIPlacingInfo(self.game)
+        self.elements.append(self.placing_info)
         
         # self.hotbar = UIHotbar((c.DISPLAY_WIDTH_CENTER, c.DISPLAY_HEIGHT*0.9))
         # self.elements.append(self.hotbar)
