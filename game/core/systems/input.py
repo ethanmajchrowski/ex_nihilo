@@ -91,7 +91,15 @@ class InputManager:
                 if self.game.state.tools.PLACING_MACHINE:
                     assert isinstance(self.game.state.selected_placing, MachineType)
                     pos = self.game.camera.screen_to_world(event.pos)
-                    self.game.add_world_object(create_machine(self.game.state.selected_placing, pos, rotation=self.game.state.selected_rot))
+                    new_machine = create_machine(
+                        self.game.state.selected_placing, pos, 
+                        rotation=self.game.state.selected_rot)
+                    
+                    if self.game.state.selected_placing.name == "Importer":
+                        new_machine.contexts = [self.game.inventory_manager]
+                        
+                    self.game.add_world_object(new_machine)
+                    
                     self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] -= 1
                     if self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name] <= 0:
                         self.game.state.tools.PLACING_MACHINE = False
