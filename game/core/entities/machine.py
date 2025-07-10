@@ -3,6 +3,7 @@ import core.entities.node as Node
 from core.systems.recipe import Recipe
 from pygame import rect
 from logger import logger
+import config.configuration as c
 
 from typing import Callable, TYPE_CHECKING
 # if TYPE_CHECKING:
@@ -63,6 +64,12 @@ class RecipeMachine(Machine):
     def __init__(self, pos, mtype: MachineType, contexts: list | None = None, rotation=0) -> None:
         super().__init__(pos, mtype, contexts, rotation)
         self.active_recipe: None | Recipe = None
+        # set default recipe to index 0
+        recipes = c.REGISTRY.recipes.get_recipes_by_machine(self.mtype.name)
+        if recipes:
+            self.set_active_recipe(recipes[0])
+        else:
+            logger.warning(f"No recipes found in recipe registry for machine {mtype.name}!")
     
     def update(self, dt):
         for node in self.nodes:
