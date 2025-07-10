@@ -73,21 +73,24 @@ class Game:
         self.ui_manager.game = self
         self.ui_manager.create_ui()
         
-        self.add_world_object(create_machine(ROCK_CRUSHER, (200, 200), rotation=2))
-        # print(self.state.world_objects)
-        self.state.world_objects[-1].set_active_recipe(c.RECIPE_REGISTRY.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
-        # print(self.state.world_objects[-1].active_recipe.inputs, self.state.world_objects[-1].active_recipe.outputs)
-        self.add_world_object(create_machine(IMPORTER, (500, 400), contexts=[self.inventory_manager], rotation=2))
-        self.add_world_object(create_machine(IMPORTER, (500, 450), contexts=[self.inventory_manager], rotation=2))
-        self.add_world_object(create_machine(MINESHAFT, (800, 200)))
-        self.state.world_objects[-1].set_active_recipe(c.RECIPE_REGISTRY.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
-        self.add_world_object(create_machine(MINESHAFT, (800, 250)))
-        self.state.world_objects[-1].set_active_recipe(c.RECIPE_REGISTRY.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
+        # self.add_world_object(create_machine(ROCK_CRUSHER, (200, 200), rotation=2))
+        # # print(self.state.world_objects)
+        # # self.state.world_objects[-1].set_active_recipe(c.RECIPE_REGISTRY.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
+        # # print(self.state.world_objects[-1].active_recipe.inputs, self.state.world_objects[-1].active_recipe.outputs)
+        # self.add_world_object(create_machine(IMPORTER, (500, 400), contexts=[self.inventory_manager], rotation=2))
+        # self.add_world_object(create_machine(IMPORTER, (500, 450), contexts=[self.inventory_manager], rotation=2))
+        # self.add_world_object(create_machine(MINESHAFT, (800, 200)))
+        # # self.state.world_objects[-1].set_active_recipe(c.RECIPE_REGISTRY.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
+        # self.add_world_object(create_machine(MINESHAFT, (800, 250)))
+        # # self.state.world_objects[-1].set_active_recipe(c.RECIPE_REGISTRY.get_recipes_by_machine(self.state.world_objects[-1].mtype.name)[0])
         
         # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[1].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[0].nodes[1], self.state.world_objects[2].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[3].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
         # self.add_world_object(Conveyor(self.state.world_objects[4].nodes[0], self.state.world_objects[0].nodes[0], inventory_manager))
+
+        self.inventory_manager.global_inventory["Mineshaft"] = 1
+        self.inventory_manager.global_inventory["Importer"] = 1
 
         self.fps_update_time = 0.0
 
@@ -110,7 +113,7 @@ class Game:
         """Update game state."""
         # print('===== UPDATE =====')
         self.ui_manager.placing_info.visible = self.state.tools.any_placing_tool()
-        
+
         if self.fps_update_time < 0.25:
             self.fps_update_time += dt
         else:

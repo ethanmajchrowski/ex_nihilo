@@ -26,6 +26,7 @@
 - [ ] conveyors don't all stop at the same time when one connected conveyor stops
 - [ ] figure out a way to remove the item buffering from conveyor IONodes
 - [ ] fix conveyor cutting to work with camera offset
+- [ ] importer only pulls from first index in inventory, should iterate over each item (going to be a pain in the ass)
 
 # GOALS
 ## Short-term goals
