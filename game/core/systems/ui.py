@@ -448,8 +448,8 @@ class UICraftingPanel(UIElement):
 
     def filtered_machines(self):
         return [
-            mtype for mtype in c.REGISTRY.machines.values()
-            if self.search_query.lower() in mtype.name.lower()
+            item for item in c.REGISTRY.get_craftable().values()
+            if self.search_query.lower() in item.name.lower()
         ]
 
     def draw_self(self, surface):

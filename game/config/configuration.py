@@ -16,10 +16,13 @@ from core.systems.registry import DataRegistry, ItemData
 REGISTRY = DataRegistry()
 RECIPE_REGISTRY = REGISTRY.recipes
 
-REGISTRY.register_item(ItemData("stone", ["can_deposit"]))
-REGISTRY.register_item(ItemData("gravel", ["can_deposit"]))
+REGISTRY.register_item(ItemData("stone", tags=["can_deposit"]))
+REGISTRY.register_item(ItemData("gravel", tags=["can_deposit"]))
 
 import core.entities.machines.machine_types as mtypes
 REGISTRY.register_machine(mtypes.IMPORTER)
 REGISTRY.register_machine(mtypes.MINESHAFT)
 REGISTRY.register_machine(mtypes.ROCK_CRUSHER)
+
+from core.systems.registry import ConveyorType, PipeType, CableType
+REGISTRY.register_transport(ConveyorType("Basic Conveyor", {"stone": 1}, 100))
