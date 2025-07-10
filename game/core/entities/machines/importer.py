@@ -3,13 +3,21 @@ from core.entities.node import NodeType
 
 def importer_update(machine: Machine, dt):
     inv_mgr = machine.contexts[0]
+    # collect items from nodes
+    input_nodes = [n for n in machine.nodes if n.kind == "input" and n.node_type == NodeType.ITEM]
+    any_item = False
+    for node in input_nodes:
+        for amount in node.inventory.values():
+            if amount > 0:
+                any_item = True
+                break
+        if any_item: break
+    if not any_item: return
 
     if machine.progress < machine.mtype.custom_data["process_duration"]:
         machine.progress += dt
     else:
         machine.progress = 0.0
-        # collect items from nodes
-        input_nodes = [n for n in machine.nodes if n.kind == "input" and n.node_type == NodeType.ITEM]
 
         for node in input_nodes:
             for item, amt in node.inventory.items():
