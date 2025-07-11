@@ -15,8 +15,6 @@ from core.systems.camera import Camera
 
 from core.entities.node import IONode
 from core.entities.conveyor import Conveyor
-from core.entities.machine import MachineType, create_machine
-from core.entities.machines.machine_types import ROCK_CRUSHER, IMPORTER, MINESHAFT
 
 from util.algorithms import lines_intersect
 
@@ -68,7 +66,7 @@ class Game:
         self.ui_manager = ui_manager
         self.input_manager = input_manager
         self.camera = camera
-                
+        
         # System manager linking to self
         self.input_manager.game = self
         self.ui_manager.game = self
@@ -112,7 +110,6 @@ class Game:
 
     def update(self, dt: float) -> None:
         """Update game state."""
-        # print('===== UPDATE =====')
         self.ui_manager.placing_info.visible = self.state.tools.any_placing_tool()
 
         if self.fps_update_time < 0.25:
@@ -164,7 +161,7 @@ class Game:
             if isinstance(obj, Conveyor):
                 if lines_intersect(pos1, pos2, obj.start_pos, obj.end_pos):
                     to_remove.append(obj)
-
+    
         for conveyor in to_remove:
             self.state.world_objects.remove(conveyor)
             for item in conveyor.items:
@@ -176,6 +173,5 @@ class Game:
                 self.inventory_manager.global_inventory[item] += amnt
                 conveyor.output_node.inventory[item] -= amnt
 
-    
     def add_world_object(self, new_object):
         self.state.world_objects.append(new_object)
