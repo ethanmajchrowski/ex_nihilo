@@ -188,7 +188,7 @@ class UIInventoryPanel(UIElement):
         if (item_name in c.REGISTRY.items 
                 and self.game.inventory_manager.global_inventory.get(item_name, 0) > 0):
             if c.REGISTRY.get_item(item_name).is_tagged("can_deposit"):
-                buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_machine(item_name), bg_color=(50, 50, 50)))
+                buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.deposit_item(item_name), bg_color=(50, 50, 50)))
         
         if item_name in c.REGISTRY.transport:
             buttons.append(UIButton(pg.Rect(0, 0, 60, 24), "Place", callback=lambda: self.place_transport(item_name), bg_color=(50, 50, 50)))
@@ -225,7 +225,10 @@ class UIInventoryPanel(UIElement):
         pass
     
     def deposit_item(self, item_name: str):
-        pass
+        self.game.state.selected_placing = item_name
+        self.game.state.tools.DEPOSITING_ITEM = True
+        assert self.parent is not None
+        self.parent.visible = False
     
     def resize_to_parent(self):
         print(self.rect)

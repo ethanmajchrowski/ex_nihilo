@@ -159,3 +159,12 @@ class Renderer:
                 color = (0, 0, 255) if node[0] == "input" else (255, 153, 0)
                 pos = (mouse_pos[0]+c.BASE_MACHINE_WIDTH*offset[0]/2, mouse_pos[1]+c.BASE_MACHINE_HEIGHT*offset[1]/2)
                 pg.draw.circle(surface, color, pos, 5)
+        
+        if state.tools.DEPOSITING_ITEM:
+            placing_item = state.selected_placing
+            assert isinstance(placing_item, str)
+            surf = asset_manager.get("items", placing_item)
+            r = surf.get_rect()
+            assert isinstance(r, pg.Rect)
+            r.bottomleft=mouse_pos
+            surface.blit(surf, r)

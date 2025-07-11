@@ -77,6 +77,18 @@ class InputManager:
                 if selected_obj.kind == "output" and self.game.state.tools.PLACING_CONVEYORS:
                     assert isinstance(self.game.state.selected_placing, TransportType)
                     self.game.state.conveyor_start = selected_obj
+                 
+                if selected_obj.kind == "input":   
+                    if self.game.state.tools.DEPOSITING_ITEM:
+                        assert isinstance(self.game.state.selected_placing, str)
+                        print(f"depositing item {self.game.state.selected_placing}")
+                        
+                        if selected_obj.can_accept(1) and self.game.inventory_manager.global_inventory[self.game.state.selected_placing] > 0:
+                            selected_obj.inventory[self.game.state.selected_placing] += 1
+                            self.game.inventory_manager.collect_item(
+                                self.game.inventory_manager.global_inventory, 
+                                self.game.state.selected_placing, 
+                                -1)
             
             if selected_obj is None:
                 if not self.game.state.tools.camera_restrict_tool():
@@ -109,7 +121,17 @@ class InputManager:
                 self.game.state.tools.PLACING_MACHINE = False
             if self.game.state.tools.PLACING_CONVEYORS:
                 self.game.state.tools.PLACING_CONVEYORS = False
-            
+            if self.game.state.tools.DEPOSITING_ITEM:
+                self.game.state.tools.DEPOSITING_ITEM = False
+            if isinstance(selected_obj, IONode):
+                pickup_item = ""
+                for item, amount in selected_obj.inventory.items():
+                    if amount > 0:
+                        pickup_item = item
+                        break
+                if pickup_item:
+                    self.game.inventory_manager.collect_item(self.game.inventory_manager.global_inventory, pickup_item)
+                    selected_obj.inventory[pickup_item] -= 1
             # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
 
     def handle_mouse_button_up(self, event):

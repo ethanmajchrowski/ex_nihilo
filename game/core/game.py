@@ -40,12 +40,13 @@ class GameState:
                 self.REMOVE_CONVEYORS: bool = False
                 self.PLACING_CONVEYORS: bool = False
                 self.PLACING_MACHINE: bool = False
+                self.DEPOSITING_ITEM: bool = False
             def any_tool(self) -> bool:
                 return self.REMOVE_CONVEYORS or self.PLACING_CONVEYORS or self.PLACING_MACHINE
             def camera_restrict_tool(self) -> bool:
                 return self.PLACING_MACHINE
             def any_placing_tool(self) -> bool:
-                return self.PLACING_CONVEYORS or self.PLACING_MACHINE
+                return self.PLACING_CONVEYORS or self.PLACING_MACHINE or self.DEPOSITING_ITEM
         
         self.tools = tools()
         
