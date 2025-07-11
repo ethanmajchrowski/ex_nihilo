@@ -155,6 +155,8 @@ class RecipeMachine(Machine):
                         logger.warning(f"[WARNING] Output overflow during execution of {self.type}: {item} x{remaining}")
 
                 logger.info(f"{self.type} finished recipe ({self.active_recipe.inputs} -> {self.active_recipe.outputs}) ({self.active_recipe.duration}s)")
+        else:
+            self.progress = 0.0
 
     def set_active_recipe(self, recipe: Recipe):
         if self.mtype.name not in recipe.machines:
