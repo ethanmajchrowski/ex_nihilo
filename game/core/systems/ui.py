@@ -615,17 +615,25 @@ class UIPlacingInfo(UIElement):
         pg.draw.rect(surface, (25, 25, 25), self.global_rect(), border_radius=5)
         pg.draw.rect(surface, (80, 80, 80), self.global_rect(), 1, border_radius=5)
         
+        name = self.game.state.selected_placing.name if hasattr(self.game.state.selected_placing, "name") else self.game.state.selected_placing
+        
         txt_surf = self.font.render(
-        f"Placing {self.game.state.selected_placing.name}", 
+        f"Placing {name}", 
         antialias=True, 
         color=(255, 255, 255))
         surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 8))
         
         txt_surf = self.font.render(
-        f"{self.game.inventory_manager.global_inventory[self.game.state.selected_placing.name]} left", 
+        f"{self.game.inventory_manager.global_inventory[name]} left", 
         antialias=True, 
         color=(255, 255, 255))
         surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 28))
+        
+        txt_surf = self.font.render(
+        "RMB to cancel", 
+        antialias=True, 
+        color=(255, 255, 255))
+        surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 48))
 
 class UIManager:
     def __init__(self):
@@ -651,7 +659,7 @@ class UIManager:
         # Toolbar buttons to toggle windows
         for i in range(4):
             def make_callback(w=self.windows[i]):
-                return lambda: setattr(w, "visible", not w.visible)
+                return lambda: self.open_window(self, w)
 
             btn = UIButton(pg.Rect(0, 0, 80, 30), toolbars[i], make_callback())
             btn.rect.topleft = (c.DISPLAY_WIDTH // 2 - 170 + i * 90, 5)
@@ -674,6 +682,14 @@ class UIManager:
         # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "PLACE"))
         # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "LINK"))
         # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "DELETE"))
+
+    @staticmethod
+    def open_window(manager: "UIManager", window_to_open: UIWindow):
+        for window in manager.windows:
+            if window == window_to_open:
+                window.visible = not window.visible
+            else:
+                window.visible = False
 
     def add(self, element):
         self.elements.append(element)
