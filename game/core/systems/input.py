@@ -182,11 +182,7 @@ class InputManager:
         self.handle_mouse_motion(event)
 
     def mouse_valid_pos(self, pos) -> bool:
-        for window in self.game.ui_manager.windows:
-            if window.global_rect().collidepoint(pos) and window.visible:
-                return False
-        
-        if self.game.ui_manager.toolbar.global_rect().collidepoint(pos):
+        if self.game.ui_manager.pos_on_ui(pos):
             return False
         
         return self.game.display.get_rect().collidepoint(pos)

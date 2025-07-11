@@ -701,3 +701,11 @@ class UIManager:
     def handle_event(self, event):
         for el in self.elements:
             el.handle_event(event)
+    
+    def pos_on_ui(self, pos) -> bool:
+        for el in self.elements:
+            if not el.visible:
+                continue
+            if el.rect.collidepoint(pos):
+                return True
+        return False
