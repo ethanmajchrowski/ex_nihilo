@@ -1,9 +1,14 @@
 from collections import defaultdict
 
 class Recipe:
-    def __init__(self, input_items: dict[str, int], output_items: dict[str, int], duration: float, machines: list[str]):
+    def __init__(self, input_items: dict[str, int], output_items: dict[str, int], duration: float, machines: list[str], 
+                 conditions: dict[str, int | bool] = {}):
+        # "inputs": {"water": 100, "ammonia": 50}, 
+        # "conditions": {"heat": 500, "pressure": 1000, "cleanroom": True}, 
+        # "outputs": {"nitric_acid": 30}
         self.inputs = input_items
         self.outputs = output_items
+        self.conditions = conditions
         self.duration = duration
         self.machines = machines
 

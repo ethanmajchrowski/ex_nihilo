@@ -9,6 +9,7 @@ from core.entities.node import IONode, NodeType
 from core.entities.conveyor import Conveyor
 from core.entities.machine import Machine, create_machine, MachineType
 from core.systems.registry import TransportType
+from core.systems.ui import UIMachineConfig
 
 from logger import logger
 
@@ -132,6 +133,8 @@ class InputManager:
                 if pickup_item:
                     self.game.inventory_manager.collect_item(self.game.inventory_manager.global_inventory, pickup_item)
                     selected_obj.inventory[pickup_item] -= 1
+            if isinstance(selected_obj, Machine):
+                self.game.ui_manager.add(UIMachineConfig(self.game, selected_obj, event.pos))
             # # TODO replace this with a more robust system that checks machine recipe. if there are multiple inputs, open a dropdown or something
 
     def handle_mouse_button_up(self, event):

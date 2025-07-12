@@ -1,5 +1,6 @@
 from collections import defaultdict
-import core.entities.node as Node
+
+from core.entities.node import ItemNode, EnergyNode
 from core.systems.recipe import Recipe
 from pygame import rect
 from logger import logger
@@ -11,10 +12,10 @@ from typing import Callable, TYPE_CHECKING
 
 class MachineType:
     def __init__(self, name: str, 
-                 nodes: list[tuple[str, tuple[float, float], Node.NodeType, int, float]],
+                 nodes: list[tuple[str, tuple[float, float], NodeType, int, float]],
                  asset_info: dict, craft_cost: dict[str, int], custom_update: None | Callable = None,
                  supports_rotation = True, supports_recipes = True, custom_data: dict = {}, 
-                 machine_class = None):
+                 machine_class = None, energy_usage = 0):
         self.name = name
         self.nodes = nodes    # [("input", (-0.9, 0)), ("output", (0.9, 0))]
         self.asset_info = asset_info  # {"image": "asset/machine/rock_crusher.png", "frames": 1}
@@ -24,6 +25,7 @@ class MachineType:
         self.craft_cost = craft_cost
         self.custom_data = custom_data
         self.machine_class = machine_class or Machine
+        self.energy_usage = energy_usage # energy used per tick
 
 class Machine:
     def __init__(self, pos, mtype: MachineType, contexts: list | None = None, rotation = 0) -> None:
@@ -37,7 +39,7 @@ class Machine:
         self.rect = rect.Rect(0, 0, 48, 48)
         self.rect.center = pos
 
-        self.nodes = [Node.IONode(self, kind, offset, node_type, capacity, transfer_interval) 
+        self.nodes = [IONode(self, kind, offset, node_type, capacity, transfer_interval) 
                       for kind, offset, node_type, capacity, transfer_interval in mtype.nodes]
         if self.mtype.supports_rotation and rotation != 0:
             for node in self.nodes:
@@ -46,6 +48,7 @@ class Machine:
                 node.recalculate_abs_pos()
                 
         self.progress = 0.0
+        self.energy_usage = self.mtype.energy_usage
 
         # contexts to give machines references
         if contexts is None:
@@ -55,6 +58,10 @@ class Machine:
     def update(self, dt):
         if self.mtype.custom_update is not None:
             self.mtype.custom_update(self, dt)
+        if self.energy_usage > 0:
+            # requires some energy per second to operate
+            for node in self.nodes:
+                if node.node_type == NodeType.ENERGY
 
     @property
     def __name__(self):
@@ -72,6 +79,7 @@ class RecipeMachine(Machine):
             logger.warning(f"No recipes found in recipe registry for machine {mtype.name}!")
     
     def update(self, dt):
+        super().update(dt)
         for node in self.nodes:
             node.update(dt)
         
@@ -80,8 +88,8 @@ class RecipeMachine(Machine):
             return
         
         # collect items from nodes
-        input_nodes = [n for n in self.nodes if n.kind == "input" and n.node_type == Node.NodeType.ITEM]
-        output_nodes = [n for n in self.nodes if n.kind == "output" and n.node_type == Node.NodeType.ITEM]
+        input_nodes = [n for n in self.nodes if n.kind == "input" and n.node_type == NodeType.ITEM]
+        output_nodes = [n for n in self.nodes if n.kind == "output" and n.node_type == NodeType.ITEM]
 
         # congregate items from all nodes (don't care which node has which item for now
         combined_inputs = defaultdict(int)

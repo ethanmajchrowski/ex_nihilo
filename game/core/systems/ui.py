@@ -635,10 +635,39 @@ class UIPlacingInfo(UIElement):
         color=(255, 255, 255))
         surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 48))
 
+class UIMachineConfig(UIElement):
+    def __init__(self, game: "Game", machine: Machine, mouse_pos: tuple[int, int]):
+        self.rect = pg.Rect(0, 0, 300, 250)
+        self.game = game
+        self.machine = machine
+        self.rect.topleft = mouse_pos
+        super().__init__(self.rect, True)
+        
+        self.font = pg.font.SysFont("Arial", 16)
+        
+        self.recipes_start = 0
+        self.recipes_end = 1
+        self.row_height = 40
+    
+    def draw_self(self, surface):
+        pg.draw.rect(surface, (60, 60, 60), self.rect, border_radius=5)
+        global_rect = self.global_rect()
+        
+        txt = self.font.render("Config", antialias=True, color=(255, 255, 255))
+        surface.blit(txt, global_rect.move(5, 5))
+    
+    def handle_event(self, event):
+        if event.type == pg.MOUSEMOTION:
+            if not self.rect.collidepoint(event.pos):
+                print("kill uiconfig")
+                self.visible = False
+                self.game.ui_manager.elements.remove(self)
+                del(self)
+
 class UIManager:
     def __init__(self):
         self.game: "Game"
-        self.elements = []
+        self.elements: list[UIElement] = []
         self.windows: list[UIWindow] = []  # for external access if needed
 
     def create_ui(self):
@@ -676,7 +705,7 @@ class UIManager:
         
         self.placing_info = UIPlacingInfo(self.game)
         self.elements.append(self.placing_info)
-        
+                
         # self.hotbar = UIHotbar((c.DISPLAY_WIDTH_CENTER, c.DISPLAY_HEIGHT*0.9))
         # self.elements.append(self.hotbar)
         # self.hotbar.add_button(UIHotbarButton(pg.rect.Rect(0, 0, 55, 30), "PLACE"))

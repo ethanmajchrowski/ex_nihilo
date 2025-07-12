@@ -1,3 +1,6 @@
+# Working on right now
+Machine configuration UI - right click and get a dropdown, possibly with multiple "tabs" as buttons to switch - machine config and recipe selection could be 2 of them. Configs created in `input.py` on line 136 and are defined in `ui.py` on line 638.
+
 # TODO
 - [ ] re-implement animations for machines
 - [ ] start to add some more machines & recipe trees

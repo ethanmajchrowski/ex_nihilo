@@ -1,107 +1,100 @@
 from collections import defaultdict
-from enum import Enum
+from typing import Literal
 from logger import logger
-    
-class NodeType(Enum):
-    ITEM = "item"
-    FLUID = "fluid"
-    ENERGY = "energy"
 
-class IONode:
-    def __init__(self, host, kind: str, offset: tuple, node_type: NodeType = NodeType.ITEM, 
-                 capacity: int = 16, transfer_interval = 0.1, abs_pos: tuple[int, int] = (0, 0)):
-        """
-        Create an input/output node for use in anything that uses or produces items.
-
-        Arguments:
-            machine: any Machine with a valid MachineType
-            kind: "input" or "output"
-            offset: x, y values from 0 - 1 that offset the node as a multiplication of the machine's position
-            node_type: str (from NodeType) representing the type of node (Item, fluid, energy, etc.)
-            capacity: net capacity of items in the node's inventory
-            transfer_interval: time between inventory transfers in seconds
-            abs_pos: Overrides abs_pos to a coordinate rather than be tied to a machine/offset.
-        
-        Output nodes push 1 item from their inventory to all connected input 
-        nodes of the same type every transfer_interval seconds
-        """
+class BaseNode:
+    def __init__(self, host, kind: Literal["input", "output"], offset: tuple, transfer_interval=0.1,
+                 abs_pos: tuple[int, int] = (0, 0)):
         self.host = host
         self.kind = kind
-        self.node_type = node_type
         self.offset = offset
-        if hasattr(self.host, "pos") and hasattr(self.host, "rect"):
-            self.abs_pos = (self.host.pos[0] + self.host.rect.w * self.offset[0] / 2, 
-                            self.host.pos[1] + self.host.rect.h * self.offset[1] / 2)
-        else:
-            self.abs_pos = abs_pos
-            if self.abs_pos == (0, 0):
-                logger.warning("Node has abs_pos (0, 0) (default without machine). Is this intentional?")
+        self.abs_pos = self.calculate_abs_pos(abs_pos)
         
-        self.capacity = capacity
-        self.connected_nodes: list[IONode] = []
+        self.connected_nodes: list[BaseNode] = []
         self.output_node_index = 0
-
-        self.transfer_timer = 0.0
         self.transfer_interval = transfer_interval
+        self.transfer_timer = 0.0
 
-        self.inventory = defaultdict(int)
-    
+    def calculate_abs_pos(self, abs_pos_override):
+        if hasattr(self.host, "pos") and hasattr(self.host, "rect"):
+            return (
+                self.host.pos[0] + self.host.rect.w * self.offset[0] / 2,
+                self.host.pos[1] + self.host.rect.h * self.offset[1] / 2
+            )
+        if abs_pos_override == (0, 0):
+            logger.warning("Node has abs_pos (0, 0) (default without machine). Is this intentional?")
+        return abs_pos_override
+
+    def recalculate_abs_pos(self, abs_pos_override=(0, 0)):
+        self.abs_pos = self.calculate_abs_pos(abs_pos_override)
+
     def update(self, dt):
+        self.transfer_timer += dt
+
+class ItemNode(BaseNode):
+    def __init__(self, host, kind: Literal["input", "output"], offset: tuple,
+                 capacity: int = 16, transfer_interval=0.1,
+                 abs_pos: tuple[int, int] = (0, 0)):
+        super().__init__(host, kind, offset, transfer_interval, abs_pos)
+        self.capacity = capacity
+        self.inventory = defaultdict(int)
+
+    def update(self, dt):
+        super().update(dt)
         if self.kind != "output" or not self.connected_nodes:
             return
-
-        self.transfer_timer += dt
         if self.transfer_timer < self.transfer_interval:
             return
 
-        # Try each connected node once, starting from output_node_index
         num_nodes = len(self.connected_nodes)
         for i in range(num_nodes):
             idx = (self.output_node_index + i) % num_nodes
             other = self.connected_nodes[idx]
 
-            if other.kind != "input" or other.node_type != self.node_type:
-                continue  # skip invalid targets
-
+            if other.kind != "input" or not isinstance(other, ItemNode):
+                continue
             if not other.can_accept(1):
-                continue  # skip full targets
+                continue
 
             for item, count in self.inventory.items():
                 if count <= 0:
                     continue
 
-                # transfer one item
                 other.inventory[item] += 1
                 self.inventory[item] -= 1
 
-                # next time, start with next node
                 self.output_node_index = (idx + 1) % num_nodes
                 self.transfer_timer = 0.0
-                return  # only one transfer per interval
+                return
 
-        # If we got here, no transfer succeeded
-        self.transfer_timer = 0.0
+        self.transfer_timer = 0.0  # no valid transfers
 
     def can_accept(self, amount: int) -> bool:
-        """
-        Check if this node can accept the transfer of amount items.
-        """
-        total = sum(self.inventory.values())
-        return total + amount <= self.capacity
+        return sum(self.inventory.values()) + amount <= self.capacity
 
     def has_item(self, item: str) -> int:
-        """
-        Gets quantity of contained item within this node.
-        """
         return self.inventory[item]
-    
-    def recalculate_abs_pos(self, abs_pos_override: tuple[int, int] = (0, 0)):
-        if hasattr(self.host, "pos") and hasattr(self.host, "rect"):
-            self.abs_pos: tuple[int, int] = (
-                self.host.pos[0] + self.host.rect.w * self.offset[0] / 2, 
-                self.host.pos[1] + self.host.rect.h * self.offset[1] / 2
-            )
-        else:
-            self.abs_pos = abs_pos_override
-            if self.abs_pos == (0, 0):
-                logger.warning("Node recalculated abs_pos to (0, 0) (default without machine). Is this intentional?")
+
+class EnergyNode(BaseNode):
+    def __init__(self, host, kind: Literal["input", "output"], offset: tuple,
+                 capacity: float = 100.0, transfer_interval=0.1,
+                 abs_pos: tuple[int, int] = (0, 0)):
+        super().__init__(host, kind, offset, transfer_interval, abs_pos)
+        self.capacity = capacity
+        self.energy = 0.0
+
+    def can_accept(self, amount: float) -> bool:
+        return self.energy + amount <= self.capacity
+
+    def add_energy(self, amount: float):
+        self.energy = min(self.energy + amount, self.capacity)
+
+    def consume_energy(self, amount: float) -> bool:
+        if self.energy >= amount:
+            self.energy -= amount
+            return True
+        return False
+
+    def update(self, dt):
+        super().update(dt)
+        # Placeholder for energy transfer logic
