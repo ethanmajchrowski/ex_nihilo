@@ -10,6 +10,8 @@ from typing import Callable, TYPE_CHECKING
 # if TYPE_CHECKING:
 #     from module.inventory import InventoryManager
 
+
+# commit test
 class MachineType:
     def __init__(self, name: str, 
                  nodes: list[tuple[str, tuple[float, float], NodeType, int, float]],
