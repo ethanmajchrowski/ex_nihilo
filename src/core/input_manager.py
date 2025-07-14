@@ -2,6 +2,8 @@ import pygame as pg
 from core.event_bus import event_bus
 from systems.camera import Camera
 
+from logger import logger
+
 class InputManager:
     def __init__(self) -> None:
         self.camera: Camera

@@ -1,6 +1,8 @@
 import pygame as pg
+from sys import exit
 from core.event_bus import event_bus
 from core.input_manager import input_manager
+from logger import logger
 
 from systems.camera import Camera
 from systems.simulation import Simulation
@@ -35,3 +37,6 @@ class Game:
             self.renderer.render(self.display_surface, input_manager.last_mouse_pos, self.camera)
             
             pg.display.update()
+
+        pg.quit()
+        exit()
