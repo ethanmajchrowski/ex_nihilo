@@ -10,7 +10,7 @@ from logger import logger
 class InputManager:
     def __init__(self) -> None:
         self.camera: Camera
-        self.last_mouse_pos = (0, 0)
+        self.last_mouse_pos: tuple[int, int]
         self.held_keys: Any = None
         
     def handle_input(self):
