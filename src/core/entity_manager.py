@@ -1,15 +1,16 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from game.machine import Machine
+    from game.simulation_entity import SimulationEntity
 
 class _EntityManager:
     def __init__(self) -> None:
-        self.entities = set()
+        self.entities: set[SimulationEntity] = set()
     
-    def add_entity(self, entity):
+    def add_entity(self, entity: SimulationEntity):
         self.entities.add(entity)
 
-    def remove_entity(self, entity):
+    def remove_entity(self, entity: SimulationEntity):
         self.entities.remove(entity)
     
     def get_tickable_entities(self):
