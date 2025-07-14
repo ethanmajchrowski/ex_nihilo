@@ -3,6 +3,35 @@
     "name": "Rock Crusher",
     "size": [1, 1],
     "components": {
-        
-    }
+        "RecipeRunner": {
+            "capabilities": [
+                "crusher"
+            ]
+        },
+        "PowerConsumer": {
+            "watts_required": 200
+        }
+    },
+    "ionodes": [
+        {
+            "id": "in_main",
+            "type": "item",
+            "direction": "input",
+            "capacity": 10,
+            "offset": [1.0, 0.0]
+        },
+        {
+            "id": "out_main",
+            "type": "item",
+            "direction": "output",
+            "capacity": 10,
+            "offset": [-1.0, 0.0]
+        },
+        {
+            "id": "power",
+            "type": "energy",
+            "direction": "input",
+            "offset": [0.0, 1.0]
+        }
+    ]
 }
