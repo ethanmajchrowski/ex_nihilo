@@ -1,6 +1,6 @@
-class MachineComponent:
-    def __init__(self, machine) -> None:
-        self.machine = machine
+class BaseComponent:
+    def __init__(self, parent) -> None:
+        self.parent = parent
 
     def tick(self):
         """

@@ -1,4 +1,4 @@
-from components.machine_component import MachineComponent
+from components.base_component import BaseComponent
 import data.configuration as c
 from game.simulation_entity import SimulationEntity
 
@@ -13,4 +13,4 @@ class Machine(SimulationEntity):
         self.position = position
         self.size = size
         
-        self.components: dict[str, MachineComponent] = {}
+        self.components: dict[str, BaseComponent] = {}
