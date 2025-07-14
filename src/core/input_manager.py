@@ -3,11 +3,14 @@ from core.event_bus import event_bus
 from systems.camera import Camera
 
 class InputManager:
-    def __init__(self, camera: Camera) -> None:
-        self.camera = camera
-        self.last_mouse_pos = None
+    def __init__(self) -> None:
+        self.camera: Camera
+        self.last_mouse_pos = (0, 0)
+        self.held_keys = pg.key.ScancodeWrapper
         
     def handle_input(self):
+        self.held_keys = pg.key.get_pressed()
+        
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 event_bus.emit("quit")
@@ -29,3 +32,7 @@ class InputManager:
             
             if event.type == pg.KEYUP:
                 event_bus.emit("key_up", event.key)
+
+        self.last_mouse_pos = pg.mouse.get_pos()
+        
+input_manager = InputManager()
