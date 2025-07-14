@@ -1,9 +1,12 @@
 import pygame as pg
 from sys import exit
-from core.event_bus import event_bus
-from core.input_manager import input_manager
 from logger import logger
 
+# singletons
+from core.event_bus import event_bus
+from core.input_manager import input_manager
+
+# systems
 from systems.camera import Camera
 from systems.simulation import Simulation
 from systems.renderer import Renderer
@@ -34,6 +37,7 @@ class Game:
 
             input_manager.handle_input()
             self.simulation_manager.update(dt)
+            self.camera.update(dt)
             self.renderer.render(self.display_surface, input_manager.last_mouse_pos, self.camera)
             
             pg.display.update()

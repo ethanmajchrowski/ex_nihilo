@@ -1,8 +1,12 @@
+from core.input_manager import input_manager
+import pygame as pg
+
 class Camera:
     def __init__(self, screen_size, position=(0, 0), zoom=1.0):
         self.position = list(position)
         self.screen_width, self.screen_height = screen_size
         self.zoom = zoom
+    
         # self.min_zoom = 0.25
         # self.max_zoom = 4.0
 
@@ -27,3 +31,10 @@ class Camera:
             screen_pos[0] / self.zoom + self.position[0],
             screen_pos[1] / self.zoom + self.position[1]
         )
+    
+    def update(self, dt):
+        if input_manager.held_keys[pg.K_d]: self.move(500*dt, 0)
+        if input_manager.held_keys[pg.K_a]: self.move(-500*dt, 0)
+        if input_manager.held_keys[pg.K_w]: self.move(0, -500*dt)
+        if input_manager.held_keys[pg.K_s]: self.move(0, 500*dt)
+        if input_manager.held_keys[pg.K_h]: self.set_pos(0, 0)

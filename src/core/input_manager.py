@@ -1,6 +1,9 @@
 import pygame as pg
 from core.event_bus import event_bus
-from systems.camera import Camera
+
+from typing import TYPE_CHECKING, Any
+if TYPE_CHECKING:
+    from systems.camera import Camera
 
 from logger import logger
 
@@ -8,7 +11,7 @@ class InputManager:
     def __init__(self) -> None:
         self.camera: Camera
         self.last_mouse_pos = (0, 0)
-        self.held_keys = pg.key.ScancodeWrapper
+        self.held_keys: Any = None
         
     def handle_input(self):
         self.held_keys = pg.key.get_pressed()
