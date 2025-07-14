@@ -32,5 +32,6 @@ class Game:
 
             input_manager.handle_input()
             self.simulation_manager.update(dt)
+            self.renderer.render(self.display_surface, input_manager.last_mouse_pos, self.camera)
             
             pg.display.update()
