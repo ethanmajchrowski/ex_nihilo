@@ -1,10 +1,9 @@
-from systems.entity_manager import EntityManager
+from core.entity_manager import entity_manager
 from logger import logger
 import data.configuration as c
 
 class Simulation:
     def __init__(self) -> None:
-        self.entity_manager: EntityManager
         self.tick_time = 0.0
         
         self.tick_count = 0
@@ -25,5 +24,7 @@ class Simulation:
         self._tick()
     
     def _tick(self):
-        # logger.debug("simulation tick")
         self.tick_count += 1
+        
+        for entity in entity_manager.get_tickable_entities():
+            entity.tick()

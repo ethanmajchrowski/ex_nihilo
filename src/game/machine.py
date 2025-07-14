@@ -14,3 +14,7 @@ class Machine(SimulationEntity):
         self.size = size
         
         self.components: dict[str, BaseComponent] = {}
+
+    def tick(self):
+        for component in self.components.values():
+            component.tick()
