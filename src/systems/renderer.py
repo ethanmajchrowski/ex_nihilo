@@ -1,7 +1,10 @@
 import pygame as pg
 
 from core.asset_manager import asset_manager
+from core.entity_manager import entity_manager
 from systems.camera import Camera
+
+import data.configuration as c
 
 class Renderer:
     def __init__(self) -> None:
@@ -43,3 +46,10 @@ class Renderer:
         offset = camera.get_offset()
         surface.fill((30, 30, 30))
         self.draw_cached_background(surface, camera, asset_manager.assets["background"]["grid"])
+        
+        for machine in entity_manager.get_machines():
+            pos = camera.world_to_screen(machine.position)
+            for tile in machine.shape:
+                pg.draw.rect(surface, (100, 100, 100), pg.Rect(
+                    pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
+                    c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))

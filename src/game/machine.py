@@ -1,13 +1,18 @@
-from components.base_component import BaseComponent
+from typing import Any
+from components.RecipeRunner import RecipeRunner
+from components.PowerConsumer import PowerConsumer
 import data.configuration as c
 from game.simulation_entity import SimulationEntity
+from systems.power_grid import PowerGrid
+from json import load
+
+components_dict = {
+    "RecipeRunner": RecipeRunner,
+    "PowerConsumer": PowerConsumer
+}
 
 class Machine(SimulationEntity):
-    def __init__(self, machine_id: str, position: tuple[int, int], 
-                 size: tuple[int, int] = c.BASE_MACHINE_SIZE) -> None:
-        
-        super().__init__(name="", x=position[0], y=position[1],
-                         width=size[0], height=size[1])
+    def __init__(self, machine_id: str, position: tuple[int, int]) -> None:
         self.machine_id = machine_id
         with open(f"src/data/machines/{self.machine_id}.json") as f:
             json = load(f)
@@ -19,13 +24,28 @@ class Machine(SimulationEntity):
         super().__init__(name=self.name, x=position[0], y=position[1])
         
         self.position = position
-        self.size = size
+        self.power_grid: PowerGrid | None = None
         
-        self.components: dict[str, BaseComponent] = {}
+        self.components: dict[str, Any] = {}
+        for component_name, args in json["components"].items():
+            comp = components_dict.get(component_name)
+            if comp is None:
+                raise ValueError(f"Unknown component while creating machine: {component_name}")
+            
+            self.components[component_name] = comp(self, args)
 
     def tick(self):
         for component in self.components.values():
             component.tick()
+        
+    def can_run(self) -> bool:
+        for component in self.components.values():
+            if hasattr(component, "evaluate_condition"):
+                if not component.evaluate_condition():
+                    print(f"Component failed condition: {component}")
+                    return False
+        
+        return True
 
 def get_footprint_center(tile_offsets: list[tuple[int, int]]) -> tuple[float, float]:
     # eventually will likely use to center sprites, although top left might end up being easier. hmm...
