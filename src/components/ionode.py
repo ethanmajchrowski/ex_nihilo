@@ -1,5 +1,7 @@
 from typing import Literal
 from game.machine import Machine
+from core.io_registry import io_registry
+import data.configuration as c
 
 class IONode:
     def __init__(self, 
@@ -16,9 +18,11 @@ class IONode:
         self.parent = parent_machine
         self.node_type = node_type
         self.offset = offset
+        
+        io_registry.register(self.calculate_abs_pos(), self)
     
     def calculate_abs_pos(self):
         return (
-            self.parent.position[0] + self.parent.rect.w * self.offset[0] / 2,
-            self.parent.position[1] + self.parent.rect.h * self.offset[1] / 2
+            self.parent.position[0] + c.BASE_MACHINE_HEIGHT * self.offset[0] / 2,
+            self.parent.position[1] + c.BASE_MACHINE_WIDTH * self.offset[1] / 2
         )
