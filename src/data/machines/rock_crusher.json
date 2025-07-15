@@ -24,14 +24,14 @@
             "type": "item",
             "direction": "input",
             "capacity": 10,
-            "offset": [1.0, 0.0]
+            "offset": [2.0, 1.0]
         },
         {
             "id": "out_main",
             "type": "item",
             "direction": "output",
             "capacity": 10,
-            "offset": [-1.0, 0.0]
+            "offset": [0.0, 1.0]
         },
         {
             "id": "power",
