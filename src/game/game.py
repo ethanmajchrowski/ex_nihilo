@@ -32,6 +32,9 @@ class Game:
         
         # fps time for debug
         self.fps_update_time = 0.0
+        
+        # debug/testing entities
+        entity_manager.add_entity(Machine("rock_crusher", (0, 0)))
 
     def run(self) -> None:
         while self.running:
