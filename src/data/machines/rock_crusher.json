@@ -13,7 +13,9 @@
             ]
         },
         "PowerConsumer": {
-            "watts_required": 200
+            "watts_required": 200,
+            "idle_watts": 0,
+            "voltage": "LV"
         }
     },
     "ionodes": [
