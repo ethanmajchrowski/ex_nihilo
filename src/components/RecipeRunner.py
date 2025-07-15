@@ -42,13 +42,13 @@ class RecipeRunner(BaseComponent):
                 # print(f"not enough {item} to run {self.selected_recipe.name} ({accounted_items.get(item, 0)}/{amount})")
                 return False
     
-        # todo: ensure valid output space for recipe outputs
+        # todo: ensure valid output space for recipe outputs before recipe begins
 
         return True
     
     def tick(self):
         just_started = self.is_running
-        if not self.can_start_recipe():
+        if not self.is_running and not self.can_start_recipe():
             self.is_running = False
             self.progress = 0
             return
@@ -63,6 +63,7 @@ class RecipeRunner(BaseComponent):
         
         self.progress += 1
         self.progress_pct = self.progress / ticks_required
+        # print(self.progress, self.progress_pct)
         if self.progress >= ticks_required:
             self.progress = 0
             self.complete_recipe()
@@ -70,10 +71,10 @@ class RecipeRunner(BaseComponent):
     
     def complete_recipe(self):
         if self.selected_recipe:
-            print(f"{self.selected_recipe.name} complete!")
+            # print(f"{self.selected_recipe.name} complete!")
             # todo: distribute output items across output nodes
             recipe_outputs = self.selected_recipe.outputs
-            output_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "output" and n.kind == "item"]
+            output_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "output" and n.kind == "item"]
             
             for item, amt in recipe_outputs.items():
                 remaining = amt
@@ -99,10 +100,10 @@ class RecipeRunner(BaseComponent):
     
     def start_recipe(self):
         if self.selected_recipe:
-            print(f"{self.selected_recipe.name} started!")
+            # print(f"{self.selected_recipe.name} started!")
             # todo: remove items from input nodes
             recipe_inputs = self.selected_recipe.inputs
-            input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "input" and n.kind == "item"]
+            input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "input" and n.kind == "item"]
             
             for item, amt in recipe_inputs.items():
                 remaining = amt
@@ -115,5 +116,5 @@ class RecipeRunner(BaseComponent):
                     remaining -= take
 
                     if remaining == 0:
-                        break       
+                        break
         

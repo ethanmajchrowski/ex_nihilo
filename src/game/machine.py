@@ -46,6 +46,11 @@ class Machine(SimulationEntity):
     def tick(self):
         for component in self.components.values():
             component.tick()
+        
+        # set node items to None if they have quantity 0
+        for node in [n for n in self.nodes if n.kind == "item"]:
+            if node.quantity is 0:
+                node.item = None
 
     def can_run(self) -> bool:
         for component in self.components.values():
