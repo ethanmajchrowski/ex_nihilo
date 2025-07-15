@@ -55,5 +55,7 @@ class Renderer:
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
             for node in machine.nodes:
                 if node.kind == "item":
-                    if node.node_type == "input":
+                    if node.direction == "input":
                         pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)
+                    if node.direction == "output":
+                        pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), 5)
