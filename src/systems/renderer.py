@@ -53,3 +53,7 @@ class Renderer:
                 pg.draw.rect(surface, (100, 100, 100), pg.Rect(
                     pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
+            for node in machine.nodes:
+                if node.kind == "item":
+                    if node.node_type == "input":
+                        pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)
