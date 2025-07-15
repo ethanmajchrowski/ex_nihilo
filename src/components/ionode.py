@@ -5,9 +5,10 @@ if TYPE_CHECKING:
     from game.machine import Machine
 
 class IONode:
-    def __init__(self, parent_machine: "Machine", node_type: Literal["input", "output"], offset: tuple[float, float]) -> None:
+    def __init__(self, parent_machine: "Machine", direction: Literal["input", "output"], offset: tuple[float, float]) -> None:
         self.parent = parent_machine
-        self.node_type = node_type
+        self.direction = direction
+        assert self.direction in ["input", "output"], "Invalid node direction"
         self.offset = offset
         self.kind: Literal["item", "energy"]
         
@@ -21,8 +22,8 @@ class IONode:
         )
 
 class ItemIONode(IONode):
-    def __init__(self, parent_machine: "Machine", node_type: Literal['input'] | Literal['output'], offset: tuple[float, float]) -> None:
-        super().__init__(parent_machine, node_type, offset)
+    def __init__(self, parent_machine: "Machine", direction: Literal['input'] | Literal['output'], offset: tuple[float, float]) -> None:
+        super().__init__(parent_machine, direction, offset)
         self.item: None | str = None
         self.quantity = 0
         self.kind = "item"

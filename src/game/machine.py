@@ -40,7 +40,7 @@ class Machine(SimulationEntity):
         self.nodes = set()
         for node_data in json["ionodes"]:
             if node_data["type"] == "item":
-                node = ItemIONode(self, node_data["type"], node_data["offset"])
+                node = ItemIONode(self, node_data["direction"], node_data["offset"])
                 self.nodes.add(node)
 
     def tick(self):
