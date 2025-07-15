@@ -5,11 +5,15 @@ from logger import logger
 # singletons
 from core.event_bus import event_bus
 from core.input_manager import input_manager
+from core.entity_manager import entity_manager
+from core.recipe_registry import recipe_registry
 
 # systems
 from systems.camera import Camera
 from systems.simulation import Simulation
 from systems.renderer import Renderer
+
+from game.machine import Machine
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
@@ -34,7 +38,9 @@ class Game:
         self.fps_update_time = 0.0
         
         # debug/testing entities
-        entity_manager.add_entity(Machine("rock_crusher", (0, 0)))
+        m = Machine("rock_crusher", (0, 0))
+        m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        entity_manager.add_entity(m)
 
     def run(self) -> None:
         while self.running:
