@@ -1,10 +1,10 @@
 import pygame as pg
 
+import data.configuration as c
 from core.asset_manager import asset_manager
 from core.entity_manager import entity_manager
 from systems.camera import Camera
 
-import data.configuration as c
 
 class Renderer:
     def __init__(self) -> None:

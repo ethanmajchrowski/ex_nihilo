@@ -1,7 +1,8 @@
-from typing import Literal
-from game.machine import Machine
+from typing import Literal, TYPE_CHECKING
 from core.io_registry import io_registry
 import data.configuration as c
+if TYPE_CHECKING:
+    from game.machine import Machine
 
 class IONode:
     def __init__(self, 

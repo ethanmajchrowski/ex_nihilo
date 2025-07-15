@@ -1,19 +1,17 @@
-import pygame as pg
 from sys import exit
-from logger import logger
 
-# singletons
+import pygame as pg
+
+from core.entity_manager import entity_manager
 from core.event_bus import event_bus
 from core.input_manager import input_manager
-from core.entity_manager import entity_manager
 from core.recipe_registry import recipe_registry
-
-# systems
-from systems.camera import Camera
-from systems.simulation import Simulation
-from systems.renderer import Renderer
-
 from game.machine import Machine
+from logger import logger
+from systems.camera import Camera
+from systems.renderer import Renderer
+from systems.simulation import Simulation
+
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
