@@ -1,4 +1,4 @@
-class IORegistry:
+class _IORegistry:
     def __init__(self) -> None:
         self._io_nodes = {}
 
@@ -10,3 +10,5 @@ class IORegistry:
 
     def get_node(self, position):
         return self._io_nodes.get(position)
+
+io_registry = _IORegistry()
