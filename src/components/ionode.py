@@ -17,13 +17,19 @@ class IONode:
     
     def calculate_abs_pos(self):
         return (
-            self.parent.position[0] + c.BASE_MACHINE_HEIGHT * self.offset[0] / 2,
-            self.parent.position[1] + c.BASE_MACHINE_WIDTH * self.offset[1] / 2
+            self.parent.position[0] + c.BASE_MACHINE_HEIGHT * self.offset[0],
+            self.parent.position[1] + c.BASE_MACHINE_WIDTH * self.offset[1]
         )
 
+
 class ItemIONode(IONode):
-    def __init__(self, parent_machine: "Machine", direction: Literal['input'] | Literal['output'], offset: tuple[float, float]) -> None:
+    def __init__(self, 
+            parent_machine: "Machine", 
+            direction: Literal['input'] | Literal['output'], 
+            offset: tuple[float, float], 
+            capacity: int = 10) -> None:
         super().__init__(parent_machine, direction, offset)
         self.item: None | str = None
         self.quantity = 0
+        self.capacity = capacity
         self.kind = "item"

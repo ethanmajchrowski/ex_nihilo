@@ -31,6 +31,7 @@ class Game:
         
         # hookup input events
         event_bus.connect("quit", lambda: setattr(self, "running", False))
+        event_bus.connect("key_down", self.debug_keys)
         
         # fps time for debug
         self.fps_update_time = 0.0
@@ -61,3 +62,10 @@ class Game:
 
         pg.quit()
         exit()
+    
+    def debug_keys(self, key):
+        if key == pg.K_g:
+            nodes = entity_manager.get_machines()[0].nodes
+            input_node = [n for n in nodes if n.kind == "item" and n.direction == "input"][0]
+            input_node.item = "stone"
+            input_node.quantity = 1

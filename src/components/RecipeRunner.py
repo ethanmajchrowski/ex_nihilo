@@ -71,15 +71,24 @@ class RecipeRunner(BaseComponent):
     def complete_recipe(self):
         if self.selected_recipe:
             print(f"{self.selected_recipe.name} complete!")
-            # todo: remove items from input nodes
-            # recipe_inputs = self.selected_recipe.inputs
-            # input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "input" and n.kind == "item"]
+            # todo: distribute output items across output nodes
+            # recipe_outputs = self.selected_recipe.outputs
+            # output_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "output" and n.kind == "item"]
     
     def start_recipe(self):
         if self.selected_recipe:
             print(f"{self.selected_recipe.name} started!")
-            # todo: distribute output items across output nodes
-            # recipe_outputs = self.selected_recipe.outputs
-            # output_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "output" and n.kind == "item"]
-        
+            # todo: remove items from input nodes
+            recipe_inputs = self.selected_recipe.inputs
+            input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "input" and n.kind == "item"]
+            
+            for item, amt in recipe_inputs.items():
+                remaining = amt
+                for node in input_nodes:
+                    take = min(node.quantity, remaining)
+                    node.quantity -= take
+                    remaining -= take
+
+                    if remaining == 0:
+                        break       
         
