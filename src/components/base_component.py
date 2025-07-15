@@ -3,7 +3,7 @@ if TYPE_CHECKING:
     from game.machine import Machine
 
 class BaseComponent:
-    def __init__(self, parent: Machine, args) -> None:
+    def __init__(self, parent: "Machine", args) -> None:
         self.parent = parent
 
     def tick(self):

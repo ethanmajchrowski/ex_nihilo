@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from game.machine import Machine
     from game.simulation_entity import SimulationEntity
+from game.machine import Machine
 
 class _EntityManager:
     def __init__(self) -> None:
