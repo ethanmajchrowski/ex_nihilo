@@ -28,7 +28,8 @@ class RecipeRunner(BaseComponent):
         
         # check item quantities in IOnodes
         recipe_inputs = self.selected_recipe.inputs
-        input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.node_type == "input" and n.kind == "item"]
+        input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "input" and n.kind == "item"]
+
         accounted_items: dict[str, int] = {}
         
         for item, amount in recipe_inputs.items():
@@ -37,8 +38,8 @@ class RecipeRunner(BaseComponent):
                     continue
                 accounted_items.update({node.item: node.quantity})
             
-            if accounted_items[item] < amount:
-                print(f"not enough {item} to run {self.selected_recipe.name} ({accounted_items[item]}/{amount})")
+            if accounted_items.get(item, 0) < amount:
+                # print(f"not enough {item} to run {self.selected_recipe.name} ({accounted_items.get(item, 0)}/{amount})")
                 return False
     
         # todo: ensure valid output space for recipe outputs
