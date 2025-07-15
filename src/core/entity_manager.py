@@ -7,10 +7,10 @@ class _EntityManager:
     def __init__(self) -> None:
         self.entities: set[SimulationEntity] = set()
     
-    def add_entity(self, entity: SimulationEntity):
+    def add_entity(self, entity: "SimulationEntity"):
         self.entities.add(entity)
 
-    def remove_entity(self, entity: SimulationEntity):
+    def remove_entity(self, entity: "SimulationEntity"):
         self.entities.remove(entity)
     
     def get_tickable_entities(self):
