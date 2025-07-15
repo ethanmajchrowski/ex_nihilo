@@ -33,3 +33,12 @@ class ItemIONode(IONode):
         self.quantity = 0
         self.capacity = capacity
         self.kind = "item"
+        
+
+class EnergyIONode(IONode):
+    def __init__(self, 
+            parent_machine: "Machine", 
+            direction: Literal['input'] | Literal['output'], 
+            offset: tuple[float, float]) -> None:
+        super().__init__(parent_machine, direction, offset)
+        self.kind = "energy"

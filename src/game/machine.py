@@ -2,14 +2,13 @@ from json import load
 from typing import Any
 
 import data.configuration as c
-from components.ionode import ItemIONode
+from components.ionode import ItemIONode, EnergyIONode
 from components.PowerConsumer import PowerConsumer
 from components.RecipeRunner import RecipeRunner
 from game.simulation_entity import SimulationEntity
 from systems.power_grid import PowerGrid
 
 components_dict = {"RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer}
-
 
 class Machine(SimulationEntity):
     def __init__(self, machine_id: str, position: tuple[int, int]) -> None:
@@ -42,6 +41,9 @@ class Machine(SimulationEntity):
             if node_data["type"] == "item":
                 node = ItemIONode(self, node_data["direction"], node_data["offset"])
                 self.nodes.add(node)
+            if node_data["type"] == "energy":
+                node = EnergyIONode(self, node_data["direction"], node_data["offset"])
+                self.nodes.add(node)
 
     def tick(self):
         for component in self.components.values():
@@ -49,7 +51,7 @@ class Machine(SimulationEntity):
         
         # set node items to None if they have quantity 0
         for node in [n for n in self.nodes if n.kind == "item"]:
-            if node.quantity is 0:
+            if node.quantity == 0:
                 node.item = None
 
     def can_run(self) -> bool:
@@ -60,7 +62,6 @@ class Machine(SimulationEntity):
                     return False
 
         return True
-
 
 def get_footprint_center(tile_offsets: list[tuple[int, int]]) -> tuple[float, float]:
     # eventually will likely use to center sprites, although top left might end up being easier. hmm...

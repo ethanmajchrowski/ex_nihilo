@@ -59,3 +59,5 @@ class Renderer:
                         pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)
                     if node.direction == "output":
                         pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), 5)
+                if node.kind == "energy":
+                    pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), 5)
