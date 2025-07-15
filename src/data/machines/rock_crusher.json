@@ -1,0 +1,43 @@
+{
+    "id": "rock_crusher",
+    "name": "Rock Crusher",
+    "footprint": [
+        [0, 0], [1, 0],
+        [0, 1], [1, 1]
+    ],
+    "center": [0, 0],
+    "components": {
+        "RecipeRunner": {
+            "capabilities": [
+                "crusher"
+            ]
+        },
+        "PowerConsumer": {
+            "watts_required": 200,
+            "idle_watts": 0,
+            "voltage": "LV"
+        }
+    },
+    "ionodes": [
+        {
+            "id": "in_main",
+            "type": "item",
+            "direction": "input",
+            "capacity": 10,
+            "offset": [2.0, 1.0]
+        },
+        {
+            "id": "out_main",
+            "type": "item",
+            "direction": "output",
+            "capacity": 10,
+            "offset": [0.0, 1.0]
+        },
+        {
+            "id": "power",
+            "type": "energy",
+            "direction": "input",
+            "offset": [0.0, 1.0]
+        }
+    ]
+}

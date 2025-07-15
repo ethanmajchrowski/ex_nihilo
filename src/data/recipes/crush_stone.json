@@ -1,0 +1,14 @@
+{
+    "id": "crush_stone",
+    "name": "Crush Stone",
+    "inputs": {
+        "stone": 1
+    },
+    "outputs": {
+        "gravel": 1
+    },
+    "required_capabilities": [
+        "crusher"
+    ],
+    "duration": 1.0 
+}
