@@ -55,7 +55,8 @@ class Game:
             if self.fps_update_time < 0.25:
                 self.fps_update_time += dt
             else:
-                pg.display.set_caption(f"EX NIHILO | FPS: {round(self.clock.get_fps())}")
+                tps, target_tps = self.simulation_manager.tps
+                pg.display.set_caption(f"EX NIHILO | FPS: {round(self.clock.get_fps())} | TPS: {tps}/{target_tps}")
                 self.fps_update_time = 0.0
 
         pg.quit()
