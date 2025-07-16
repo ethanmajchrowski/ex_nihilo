@@ -1,0 +1,36 @@
+{
+    "id": "rock_crusher",
+    "name": "Rock Crusher",
+    "footprint": [
+        [0, 1],
+        [0, 0], 
+        [0, -1]
+    ],
+    "center": [0, 0],
+    "components": {
+        "FluidConsumer": {
+            "fluid_type": "fluid.steam_low_pressure",
+            "consumption_rate": 5,
+            "ionode_id": "steam_in"
+        },
+        "PowerProducer": {
+            "watts": 2000,
+            "voltage": "LV"
+        }
+    },
+    "ionodes": [
+        {
+            "id": "steam_in",
+            "type": "fluid",
+            "direction": "input",
+            "capacity": 10,
+            "offset": [0.5, -1.0]
+        },
+        {
+            "id": "power_out",
+            "type": "energy",
+            "direction": "output",
+            "offset": [0.5, 2.0]
+        }
+    ]
+}

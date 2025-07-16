@@ -3,7 +3,6 @@ import data.configuration as c
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.recipe_registry import Recipe
-    from components.ionode import ItemIONode
 
 class RecipeRunner(BaseComponent):
     def __init__(self, parent, args) -> None:
@@ -27,7 +26,7 @@ class RecipeRunner(BaseComponent):
         #   - the machine has the required capability tags
         
         # check item quantities in IOnodes
-        input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "input" and n.kind == "item"]
+        input_nodes = self.parent.get_item_nodes("input")
 
         accounted_items: dict[str, int] = {}
         
@@ -41,7 +40,7 @@ class RecipeRunner(BaseComponent):
                 # print(f"not enough {item} to run {self.selected_recipe.name} ({accounted_items.get(item, 0)}/{amount})")
                 return False
     
-        output_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "output" and n.kind == "item"]
+        output_nodes = self.parent.get_item_nodes("output")
         for item, amount in self.selected_recipe.outputs.items():
             for node in output_nodes:
                 if node.item and node.item != item:
@@ -79,7 +78,7 @@ class RecipeRunner(BaseComponent):
     def complete_recipe(self):
         if self.selected_recipe:
             # print(f"{self.selected_recipe.name} complete!")
-            output_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "output" and n.kind == "item"]
+            output_nodes = self.parent.get_item_nodes("output")
             
             for item, amt in self.selected_recipe.outputs.items():
                 remaining = amt
@@ -106,7 +105,7 @@ class RecipeRunner(BaseComponent):
     def start_recipe(self):
         if self.selected_recipe:
             # print(f"{self.selected_recipe.name} started!")
-            input_nodes: list[ItemIONode] = [n for n in self.parent.nodes if n.direction == "input" and n.kind == "item"]
+            input_nodes = self.parent.get_item_nodes("input")
             
             for item, amt in self.selected_recipe.inputs.items():
                 remaining = amt

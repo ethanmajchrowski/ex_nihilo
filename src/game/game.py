@@ -6,6 +6,7 @@ from core.entity_manager import entity_manager
 from core.event_bus import event_bus
 from core.input_manager import input_manager
 from core.recipe_registry import recipe_registry
+from core.io_registry import io_registry
 from game.machine import Machine
 from logger import logger
 from systems.camera import Camera
@@ -40,7 +41,10 @@ class Game:
         m = Machine("rock_crusher", (0, 0))
         m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
         entity_manager.add_entity(m)
-
+        
+        st = Machine("basic_steam_turbine", (200, 0))
+        entity_manager.add_entity(st)
+        
     def run(self) -> None:
         while self.running:
             dt = self.clock.tick() / 1000 # clock.tick returns milliseconds as integer so we convert to seconds since last frame by / 1000
@@ -65,7 +69,12 @@ class Game:
     
     def debug_keys(self, key):
         if key == pg.K_g:
-            nodes = entity_manager.get_machines()[0].nodes
-            input_node = [n for n in nodes if n.kind == "item" and n.direction == "input"][0]
-            input_node.item = "stone"
+            input_node = entity_manager.get_machines()[0].get_item_nodes()[0]
+            input_node.item = "item.stone"
             input_node.quantity = 1
+        if key == pg.K_h:
+            input_node = entity_manager.get_machine_at_position((200, 0))
+            if input_node: 
+                input_node = input_node.get_fluid_nodes()[0]
+                input_node.fluid = "fluid.steam_low_pressure"
+                input_node.quantity += 100

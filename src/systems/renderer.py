@@ -47,10 +47,15 @@ class Renderer:
         surface.fill((30, 30, 30))
         self.draw_cached_background(surface, camera, asset_manager.assets["background"]["grid"])
         
+        hover = entity_manager.get_machine_under_position(camera.screen_to_world(mouse_pos))
+        
         for machine in entity_manager.get_machines():
             pos = camera.world_to_screen(machine.position)
             for tile in machine.shape:
-                pg.draw.rect(surface, (100, 100, 100), pg.Rect(
+                color = (100, 100, 100)
+                if hover and machine is hover:
+                    color = (200, 200, 200)
+                pg.draw.rect(surface, color, pg.Rect(
                     pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
             for node in machine.nodes:
@@ -61,3 +66,5 @@ class Renderer:
                         pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), 5)
                 if node.kind == "energy":
                     pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), 5)
+                if node.kind == "fluid":
+                    pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)

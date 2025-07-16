@@ -12,6 +12,7 @@ class PowerConsumer(BaseComponent):
         return
     
     def evaluate_condition(self) -> bool:
+        # todo make this actually functional
         return True
         draw = self.idle_watts
         
