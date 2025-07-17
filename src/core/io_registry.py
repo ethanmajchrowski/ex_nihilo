@@ -1,8 +1,8 @@
 from typing import Union, Optional, TYPE_CHECKING, cast
 if TYPE_CHECKING:
-    from components.ionode import IONode, ItemIONode, FluidIONode, EnergyIONode
+    from components.ionode import IONode, ItemIONode, EnergyIONode
 
-_IONodeType = Union["ItemIONode", "EnergyIONode", "FluidIONode", "IONode"]
+_IONodeType = Union["ItemIONode", "EnergyIONode", "IONode"]
 
 class _IORegistry:
     def __init__(self) -> None:
@@ -26,10 +26,7 @@ class _IORegistry:
             return cast("EnergyIONode", node)
         return None
 
-    def get_fluid_node(self, position: tuple[int, int]) -> Optional["FluidIONode"]:
-        node = self._io_nodes.get(position)
-        if node and getattr(node, "kind", None) == "fluid":
-            return cast("FluidIONode", node)
-        return None
+    def get_node(self, position: tuple[int, int]) -> Optional[_IONodeType]:
+        return self._io_nodes.get(position)
 
 io_registry = _IORegistry()

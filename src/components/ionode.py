@@ -29,12 +29,15 @@ class ItemIONode(IONode):
                  parent_machine: "Machine", 
                  direction: Literal['input'] | Literal['output'], 
                  offset: tuple[float, float], 
-                 capacity: int = 10) -> None:
+                 capacity: int = 10, kind: Literal["fluid", "item"] = "item") -> None:
         super().__init__(node_id, parent_machine, direction, offset)
         self.item: None | str = None
         self.quantity = 0
         self.capacity = capacity
-        self.kind = "item"
+        self.kind = kind
+    
+    def can_outupt(self):
+        return self.kind is not None and self.quantity > 0
         
 
 class EnergyIONode(IONode):
@@ -45,16 +48,3 @@ class EnergyIONode(IONode):
                  offset: tuple[float, float]) -> None:
         super().__init__(node_id, parent_machine, direction, offset)
         self.kind = "energy"
-
-class FluidIONode(IONode):
-    def __init__(self,
-                 node_id: str, 
-                 parent_machine: "Machine", 
-                 direction: Literal['input'] | Literal['output'], 
-                 offset: tuple[float, float],
-                 capacity: int = 1000) -> None:
-        super().__init__(node_id, parent_machine, direction, offset)
-        self.fluid: None | str = None
-        self.quantity = 0
-        self.capacity = capacity
-        self.kind = "fluid"
