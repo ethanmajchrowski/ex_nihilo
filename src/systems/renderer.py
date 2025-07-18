@@ -6,7 +6,7 @@ from core.entity_manager import entity_manager
 from core.global_inventory import global_inventory
 from systems.camera import Camera
 from core.utils import interpolate_color
-
+from core.input_manager import input_manager
 
 class Renderer:
     def __init__(self) -> None:
@@ -49,34 +49,37 @@ class Renderer:
         surface.fill((30, 30, 30))
         self.draw_cached_background(surface, camera, asset_manager.assets["background"]["grid"])
         
-        hover = entity_manager.get_machine_under_position(camera.screen_to_world(mouse_pos))
+        tile_rect = pg.Rect(camera.world_to_screen(input_manager.last_mouse_pos_snapped), (c.BASE_MACHINE_WIDTH/2, c.BASE_MACHINE_HEIGHT/2))
+        # pg.draw.rect(surface, (60, 60, 60), tile_rect)
         
         for machine in entity_manager.get_machines():
             pos = camera.world_to_screen(machine.position)
             for tile in machine.shape:
                 color = (100, 100, 100)
-                if hover and machine is hover:
+                if input_manager.hovered_item is machine:
                     color = (140, 140, 140)
                 pg.draw.rect(surface, color, pg.Rect(
                     pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
             for node in machine.nodes:
+                size = 3
+                if node is input_manager.hovered_item:
+                    size += 2
                 if node.kind == "item":
                     if node.direction == "input":
-                        pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 3)
+                        pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), size)
                     if node.direction == "output":
-                        pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), 3)
+                        pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), size)
                 if node.kind == "energy":
-                    pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), 3)
+                    pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), size)
                 if node.kind == "fluid":
-                    pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 3)
+                    pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), size)
         
         for link in entity_manager.get_transfer_links():
+            on_color = (241, 201, 120) if link.type == "item" else (97, 158, 249)
             start, end = camera.world_to_screen(link.start_pos), camera.world_to_screen(link.end_pos)
-            fresh_color, off_color = (241, 201, 120), (150, 150, 150)
-            color = fresh_color if link.used_this_tick else off_color
-            width = 2 if not link.used_this_tick else 4
-            pg.draw.aaline(surface, color, start, end, width)
+            color = interpolate_color(link.ticks_since_transfer, 0, 25, on_color, (150, 150, 150))
+            pg.draw.aaline(surface, color, start, end, 2)
         
         f = self.debug_font.render(str(camera.screen_to_world(mouse_pos)), True, (255, 255, 255))
         surface.blit(f, (10, 10))
@@ -84,12 +87,5 @@ class Renderer:
         f = self.debug_font.render("\n".join([f"{key}: {val}" for key, val in global_inventory._inventory.items()]), True, (255, 255, 255))
         surface.blit(f, (w+15, 10))
         
-        wmp = camera.screen_to_world(mouse_pos)
-        x = wmp[0]//(c.BASE_MACHINE_WIDTH/2) * (c.BASE_MACHINE_WIDTH/2)
-        y = wmp[1]//(c.BASE_MACHINE_HEIGHT/2) * (c.BASE_MACHINE_HEIGHT/2)
-        snapped_pos = (x, y)
-        tile_rect = pg.Rect(camera.world_to_screen(snapped_pos), (c.BASE_MACHINE_WIDTH/2, c.BASE_MACHINE_HEIGHT/2))
-        pg.draw.rect(surface, (60, 60, 60), tile_rect)
-        
-        f = self.debug_font.render(str(snapped_pos), True, (255, 255, 255))
+        f = self.debug_font.render(str(input_manager.last_mouse_pos_snapped), True, (255, 255, 255))
         surface.blit(f, (10, 40))

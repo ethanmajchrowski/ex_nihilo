@@ -7,6 +7,9 @@ from core.transfer_registry import transfer_registry
 from game.simulation_entity import SimulationEntity
 
 class TransferLink(SimulationEntity):
+    NOT_USED = 0
+    USED_BY_OTHER_LINK = 1
+    USED_BY_SELF = 2    
     def __init__(self, start_pos: tuple[int, int], end_pos: tuple[int, int], link_id: str):
         super().__init__("TransferLink", start_pos[0], start_pos[1], True)
         self.end_pos = end_pos
@@ -16,14 +19,14 @@ class TransferLink(SimulationEntity):
         with open(f"src/data/transfer_links/{self.link_id}.json") as f:
             json = load(f)
         
-        self.used_this_tick = False
+        self.used_this_tick = TransferLink.NOT_USED
         self.round_robin_index = 0 # used to sort out which input node that overlaps our output node gets the item
 
         self.type = json["type"]
         self.transfer_quantity: int = json["transfer_quantity"] # units per transfer_time
         self.transfer_ticks: int = json["transfer_ticks"] # ticks to complete a transfer
         self._ticks = 0 # counter to complete transfer_time
-        self.ticks_since_transfer = 0
+        self.ticks_since_transfer = 25
         
         self.upstream: list[TransferLink] = []
         self.downstream: list[TransferLink] = []
@@ -65,12 +68,15 @@ class TransferLink(SimulationEntity):
     def tick(self):
         # dont do anything if we have handled this chain this tick OR we have an upstream link
         # only run on conveyors that start a chain
-        self.used_this_tick = False
+        if self.ticks_since_transfer < 25:
+            self.ticks_since_transfer += 1
+        if self.used_this_tick == TransferLink.USED_BY_SELF:
+            self.used_this_tick = TransferLink.NOT_USED
+        
         if self.upstream:
             return
 
         self._ticks += 1
-        # self.ticks_since_transfer += 1
 
         if self._ticks < self.transfer_ticks:
             return
@@ -98,6 +104,9 @@ class TransferLink(SimulationEntity):
                 
                 if start_node.quantity <= 0:
                     start_node.item = None
+                
                 for link in vis:
-                    link.used_this_tick = True
-                # self.ticks_since_transfer = 0
+                    link.used_this_tick = TransferLink.USED_BY_OTHER_LINK
+                    link.ticks_since_transfer = 0
+                self.used_this_tick = TransferLink.USED_BY_SELF
+                self.ticks_since_transfer = 0

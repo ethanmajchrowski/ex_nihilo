@@ -27,6 +27,8 @@ class Simulation:
     
     def _tick(self):
         self._tick_count += 1
+        for link in entity_manager.get_transfer_links():
+            link.used_this_tick = link.NOT_USED
         
         for entity in entity_manager.get_tickable_entities():
             entity.tick()
