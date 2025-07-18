@@ -68,3 +68,7 @@ class Renderer:
                     pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), 5)
                 if node.kind == "fluid":
                     pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)
+        
+        for link in entity_manager.get_transfer_links():
+            start, end = camera.world_to_screen(link.start_pos), camera.world_to_screen(link.end_pos)
+            pg.draw.aaline(surface, (255, 255, 255), start, end, 5)

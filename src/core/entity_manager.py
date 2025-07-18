@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from game.simulation_entity import SimulationEntity
 from game.machine import Machine
+from game.transfer_link import TransferLink
 import data.configuration as c
 
 class _EntityManager:
@@ -16,6 +17,9 @@ class _EntityManager:
     
     def get_tickable_entities(self):
         return [e for e in self.entities if hasattr(e, "tick")]
+
+    def get_transfer_links(self):
+        return [e for e in self.entities if isinstance(e, TransferLink)]
     
     def get_machines(self):
         return [e for e in self.entities if isinstance(e, Machine)]
