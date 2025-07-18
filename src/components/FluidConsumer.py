@@ -5,12 +5,12 @@ class FluidConsumer(BaseComponent):
         super().__init__(parent, args)
         self.fluid_type: str = args["fluid_type"]
         self.consumption_rate: int = args["consumption_rate"]
-        self.ionode = self.parent.get_fluid_node(args["ionode_id"])
+        self.ionode = self.parent.get_item_node(args["ionode_id"])
         
         self.satisfied = False
     
     def tick(self):
-        if not self.ionode or self.ionode.fluid != self.fluid_type:
+        if not self.ionode or self.ionode.item != self.fluid_type:
             self.satisfied = False
             return
             

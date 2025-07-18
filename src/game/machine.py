@@ -2,7 +2,7 @@ from json import load
 from typing import Any, Optional, Literal
 
 import data.configuration as c
-from components.ionode import ItemIONode, EnergyIONode, FluidIONode
+from components.ionode import ItemIONode, EnergyIONode
 from components.PowerConsumer import PowerConsumer
 from components.RecipeRunner import RecipeRunner
 from components.PowerProducer import PowerProducer
@@ -28,18 +28,25 @@ class Machine(SimulationEntity):
         self.power_grid: PowerGrid | None = None
 
         # create IO Nodes
-        self.nodes: set[ItemIONode | FluidIONode | EnergyIONode] = set()
+        self.nodes: set[ItemIONode | EnergyIONode] = set()
         for node_data in json["ionodes"]:
             assert isinstance(node_data, dict), f"Invalid component data {node_data}"
             node = None
-            if node_data["type"] == "item":
-                node = ItemIONode(node_data["id"], self, node_data["direction"], node_data["offset"], node_data.get("capacity", 10))
+            if node_data["type"] in ["item", "fluid"]:
+                default_cap = 10 if node_data["type"] == "item" else 1000
+                node = ItemIONode(
+                                    node_id=node_data["id"], 
+                                    parent_machine=self, 
+                                    direction=node_data["direction"], 
+                                    offset=node_data["offset"], 
+                                    capacity=node_data.get("capacity", default_cap), 
+                                    kind=node_data["type"]
+                                )
+        
             if node_data["type"] == "energy":
                 node = EnergyIONode(node_data["id"], self, node_data["direction"], node_data["offset"])
-            if node_data["type"] == "fluid":
-                node = FluidIONode(node_data["id"], self, node_data["direction"], node_data["offset"], node_data.get("capacity", 1000))
             
-            assert isinstance(node, ItemIONode | EnergyIONode | FluidIONode)
+            assert isinstance(node, ItemIONode | EnergyIONode)
             self.nodes.add(node)
 
         self.components: dict[str, Any] = {}
@@ -82,17 +89,10 @@ class Machine(SimulationEntity):
             return [node for node in self.nodes if isinstance(node, ItemIONode) and node.kind == direction_filter]
     def get_energy_nodes(self) -> list[EnergyIONode]:
         return [node for node in self.nodes if isinstance(node, EnergyIONode)]
-    def get_fluid_nodes(self) -> list[FluidIONode]:
-        return [node for node in self.nodes if isinstance(node, FluidIONode)]
     # Getters for nodes by ID and type
     def get_item_node(self, id: str) -> Optional[ItemIONode]:
         for node in self.nodes:
             if isinstance(node, ItemIONode) and node.id == id:
-                return node
-        return None
-    def get_fluid_node(self, id: str) -> Optional[FluidIONode]:
-        for node in self.nodes:
-            if isinstance(node, FluidIONode) and node.id == id:
                 return node
         return None
     def get_energy_node(self, id: str) -> Optional[EnergyIONode]:

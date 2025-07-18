@@ -8,11 +8,11 @@ from core.input_manager import input_manager
 from core.recipe_registry import recipe_registry
 from core.io_registry import io_registry
 from game.machine import Machine
+from game.transfer_link import TransferLink
 from logger import logger
 from systems.camera import Camera
 from systems.renderer import Renderer
 from systems.simulation import Simulation
-
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
@@ -45,6 +45,9 @@ class Game:
         st = Machine("basic_steam_turbine", (200, 0))
         entity_manager.add_entity(st)
         
+        c = TransferLink((-100, -100), (100, 100), "basic_conveyor")
+        entity_manager.add_entity(c)
+        
     def run(self) -> None:
         while self.running:
             dt = self.clock.tick() / 1000 # clock.tick returns milliseconds as integer so we convert to seconds since last frame by / 1000
@@ -75,6 +78,7 @@ class Game:
         if key == pg.K_h:
             input_node = entity_manager.get_machine_at_position((200, 0))
             if input_node: 
-                input_node = input_node.get_fluid_nodes()[0]
-                input_node.fluid = "fluid.steam_low_pressure"
-                input_node.quantity += 100
+                input_node = input_node.get_item_node("steam_in")
+                if input_node:
+                    input_node.item = "fluid.steam_low_pressure"
+                    input_node.quantity += 100
