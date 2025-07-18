@@ -13,6 +13,7 @@ from logger import logger
 from systems.camera import Camera
 from systems.renderer import Renderer
 from systems.simulation import Simulation
+import data.configuration as c
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
@@ -42,11 +43,47 @@ class Game:
         m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
         entity_manager.add_entity(m)
         
-        st = Machine("basic_steam_turbine", (200, 0))
-        entity_manager.add_entity(st)
+        input_node = m.get_item_node("in_main")
+        if input_node:
+            input_node.item = "item.stone"
+            input_node.quantity += 500
+
+        m = Machine("rock_crusher", (0, 5*c.BASE_MACHINE_HEIGHT))
+        m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        entity_manager.add_entity(m)
         
-        c = TransferLink((-100, -100), (100, 100), "basic_conveyor")
-        entity_manager.add_entity(c)
+        input_node = m.get_item_node("in_main")
+        if input_node:
+            input_node.item = "item.stone"
+            input_node.quantity += 500
+        
+        m = Machine("rock_crusher", (0, 10*c.BASE_MACHINE_HEIGHT))
+        m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        entity_manager.add_entity(m)
+        
+        input_node = m.get_item_node("in_main")
+        if input_node:
+            input_node.item = "item.stone"
+            input_node.quantity += 500
+        
+        # st = Machine("basic_steam_turbine", (4*c.BASE_MACHINE_HEIGHT, -4*c.BASE_MACHINE_HEIGHT))
+        # entity_manager.add_entity(st)
+        
+        link = TransferLink((0, 144), (100, 50), "basic_conveyor")
+        entity_manager.add_entity(link)
+        link = TransferLink((0, 24), (100, 50), "basic_conveyor")
+        entity_manager.add_entity(link)
+        link = TransferLink((100, 50), (96, 12), "basic_conveyor")
+        entity_manager.add_entity(link)
+        link = TransferLink((100, 50), (200, 100), "basic_conveyor")
+        entity_manager.add_entity(link)
+        link = TransferLink((0, 264), (4*c.BASE_MACHINE_WIDTH, 264), "basic_conveyor")
+        entity_manager.add_entity(link)
+        link = TransferLink((4*c.BASE_MACHINE_WIDTH, 264), (100, 50), "basic_conveyor")
+        entity_manager.add_entity(link)
+        
+        im = Machine("importer", (4*c.BASE_MACHINE_HEIGHT, 0))
+        entity_manager.add_entity(im)
         
     def run(self) -> None:
         while self.running:
@@ -72,9 +109,13 @@ class Game:
     
     def debug_keys(self, key):
         if key == pg.K_g:
-            input_node = entity_manager.get_machines()[0].get_item_nodes()[0]
-            input_node.item = "item.stone"
-            input_node.quantity = 1
+            input_node = entity_manager.get_machine_at_position((0, 0))
+            if not input_node:
+                return
+            input_node = input_node.get_item_node("in_main")
+            if input_node:
+                input_node.item = "item.stone"
+                input_node.quantity += 1
         if key == pg.K_h:
             input_node = entity_manager.get_machine_at_position((200, 0))
             if input_node: 
@@ -82,3 +123,20 @@ class Game:
                 if input_node:
                     input_node.item = "fluid.steam_low_pressure"
                     input_node.quantity += 100
+        if key == pg.K_j:
+            input_node = entity_manager.get_machine_at_position((300, 0))
+            if input_node: 
+                input_node = input_node.get_item_node("item_in")
+                if input_node:
+                    input_node.item = "item.stone"
+                    input_node.quantity += 5
+        # if key == pg.K_k:
+        #     input_node = entity_manager.get_machine_at_position((0, 0))
+        #     if not input_node:
+        #         return
+        #     input_node = input_node.get_item_node("out_main")
+        #     if input_node:
+        #         input_node.item = "item.gravel"
+
+
+
