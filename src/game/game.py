@@ -13,6 +13,7 @@ from logger import logger
 from systems.camera import Camera
 from systems.renderer import Renderer
 from systems.simulation import Simulation
+from ui.ui import UIManager
 import data.configuration as c
 
 class Game:
@@ -30,6 +31,7 @@ class Game:
         self.simulation_manager = Simulation()
         self.renderer = Renderer()
         self.renderer.generate_background_grid_surface()
+        self.ui_manager = UIManager()
         
         # hookup input events
         event_bus.connect("quit", lambda: setattr(self, "running", False))
@@ -90,10 +92,11 @@ class Game:
             dt = self.clock.tick() / 1000 # clock.tick returns milliseconds as integer so we convert to seconds since last frame by / 1000
             self.display_surface.fill((0, 0, 0))
 
-            input_manager.handle_input()
+            input_manager.handle_input(self.ui_manager)
             self.simulation_manager.update(dt)
             self.camera.update(dt)
             self.renderer.render(self.display_surface, input_manager.last_mouse_pos, self.camera)
+            self.ui_manager.draw(self.display_surface)
             
             pg.display.update()
 

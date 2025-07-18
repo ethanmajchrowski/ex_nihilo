@@ -39,7 +39,7 @@ class InputManager:
         
         # todo figure out how to do transfer links ?
 
-    def handle_input(self):
+    def handle_input(self, ui_manager):
         self.held_keys = pg.key.get_pressed()
 
         self.last_mouse_pos = pg.mouse.get_pos()
@@ -49,6 +49,7 @@ class InputManager:
         self.last_mouse_pos_snapped = (x, y)
         
         for event in pg.event.get():
+            ui_manager.handle_event(event)
             if event.type == pg.QUIT:
                 event_bus.emit("quit")
             
