@@ -3,12 +3,14 @@ import pygame as pg
 import data.configuration as c
 from core.asset_manager import asset_manager
 from core.entity_manager import entity_manager
+from core.global_inventory import global_inventory
 from systems.camera import Camera
+from core.utils import interpolate_color
 
 
 class Renderer:
     def __init__(self) -> None:
-        pass
+        self.debug_font = pg.font.SysFont("arial", 16)
     
     def generate_background_grid_surface(self, tile_size=256, grid_size=(2048, 2048),
                                         color1=(30, 30, 30), color2=(31, 31, 31)):
@@ -54,21 +56,40 @@ class Renderer:
             for tile in machine.shape:
                 color = (100, 100, 100)
                 if hover and machine is hover:
-                    color = (200, 200, 200)
+                    color = (140, 140, 140)
                 pg.draw.rect(surface, color, pg.Rect(
                     pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
             for node in machine.nodes:
                 if node.kind == "item":
                     if node.direction == "input":
-                        pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)
+                        pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 3)
                     if node.direction == "output":
-                        pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), 5)
+                        pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), 3)
                 if node.kind == "energy":
-                    pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), 5)
+                    pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), 3)
                 if node.kind == "fluid":
-                    pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 5)
+                    pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), 3)
         
         for link in entity_manager.get_transfer_links():
             start, end = camera.world_to_screen(link.start_pos), camera.world_to_screen(link.end_pos)
-            pg.draw.aaline(surface, (255, 255, 255), start, end, 5)
+            fresh_color, off_color = (241, 201, 120), (150, 150, 150)
+            color = fresh_color if link.used_this_tick else off_color
+            width = 2 if not link.used_this_tick else 4
+            pg.draw.aaline(surface, color, start, end, width)
+        
+        f = self.debug_font.render(str(camera.screen_to_world(mouse_pos)), True, (255, 255, 255))
+        surface.blit(f, (10, 10))
+        w = f.get_width()
+        f = self.debug_font.render("\n".join([f"{key}: {val}" for key, val in global_inventory._inventory.items()]), True, (255, 255, 255))
+        surface.blit(f, (w+15, 10))
+        
+        wmp = camera.screen_to_world(mouse_pos)
+        x = wmp[0]//(c.BASE_MACHINE_WIDTH/2) * (c.BASE_MACHINE_WIDTH/2)
+        y = wmp[1]//(c.BASE_MACHINE_HEIGHT/2) * (c.BASE_MACHINE_HEIGHT/2)
+        snapped_pos = (x, y)
+        tile_rect = pg.Rect(camera.world_to_screen(snapped_pos), (c.BASE_MACHINE_WIDTH/2, c.BASE_MACHINE_HEIGHT/2))
+        pg.draw.rect(surface, (60, 60, 60), tile_rect)
+        
+        f = self.debug_font.render(str(snapped_pos), True, (255, 255, 255))
+        surface.blit(f, (10, 40))

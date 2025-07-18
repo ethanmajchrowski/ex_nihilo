@@ -1,0 +1,23 @@
+{
+    "id": "importer",
+    "name": "Importer",
+    "footprint": [
+        [0, 0]
+    ],
+    "center": [0, 0],
+    "components": {
+        "ImporterComponent": {
+            "transfer_ticks": 5,
+            "transfer_quantity": 1
+        }
+    },
+    "ionodes": [
+        {
+            "id": "item_in",
+            "type": "item",
+            "direction": "input",
+            "capacity": 10,
+            "offset": [0.0, 0.5]
+        }
+    ]
+}

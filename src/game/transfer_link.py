@@ -1,5 +1,5 @@
 from json import load
-from typing import Literal
+from typing import Literal, Optional
 
 from components.ionode import ItemIONode
 from core.io_registry import io_registry
@@ -23,29 +23,30 @@ class TransferLink(SimulationEntity):
         self.transfer_quantity: int = json["transfer_quantity"] # units per transfer_time
         self.transfer_ticks: int = json["transfer_ticks"] # ticks to complete a transfer
         self._ticks = 0 # counter to complete transfer_time
+        self.ticks_since_transfer = 0
         
         self.upstream: list[TransferLink] = []
         self.downstream: list[TransferLink] = []
         
         transfer_registry.register(self)
     
-    def find_valid_target(self, item, visited=None) -> None | ItemIONode:
+    def find_valid_target(self, item, visited=None) -> tuple[Optional[ItemIONode], list["TransferLink"]]:
         if visited is None:
             visited = set()
         if self in visited:
-            return None
+            return None, []
         
         visited.add(self)
 
         # Check if our end_pos is a valid IONode
         node = io_registry.get_item_node(self.end_pos)
-        if node and node.item == item:
-            return node
+        if node and (node.item == item or node.item is None):
+            return node, [self]
 
         # Try downstream links in round robin order
         downstream_len = len(self.downstream)
         if downstream_len == 0:
-            return None
+            return None, []
 
         start_index = self.round_robin_index
         for i in range(downstream_len):
@@ -53,21 +54,24 @@ class TransferLink(SimulationEntity):
             link = self.downstream[index]
             if link in visited:
                 continue
-            target = link.find_valid_target(item, visited)
+            target, path = link.find_valid_target(item, visited)
             if target:
                 # Update round robin index *once a valid path is found*
                 self.round_robin_index = (index + 1) % downstream_len
-                return target
+                return target, [self] + path
 
-        return None
+        return None, []
     
     def tick(self):
         # dont do anything if we have handled this chain this tick OR we have an upstream link
         # only run on conveyors that start a chain
-        if self.used_this_tick or self.upstream:
+        self.used_this_tick = False
+        if self.upstream:
             return
 
         self._ticks += 1
+        # self.ticks_since_transfer += 1
+
         if self._ticks < self.transfer_ticks:
             return
         
@@ -82,11 +86,9 @@ class TransferLink(SimulationEntity):
             return
         
         # attempt to find path
-        target = self.find_valid_target(start_node.item)
-        if target:
+        target, vis = self.find_valid_target(start_node.item)
+        if target and vis:
             accepted = min(target.capacity - target.quantity, to_remove)
-            
-            self.used_this_tick = True
             
             if target.item is None:
                 target.item = start_node.item
@@ -96,3 +98,6 @@ class TransferLink(SimulationEntity):
                 
                 if start_node.quantity <= 0:
                     start_node.item = None
+                for link in vis:
+                    link.used_this_tick = True
+                # self.ticks_since_transfer = 0

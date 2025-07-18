@@ -1,5 +1,6 @@
 import pygame as pg
 from core.event_bus import event_bus
+import data.configuration as c
 
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
@@ -11,6 +12,7 @@ class InputManager:
     def __init__(self) -> None:
         self.camera: Camera
         self.last_mouse_pos: tuple[int, int]
+        self.last_mouse_pos_snapped: tuple[int, int]
         self.held_keys: Any = None
         
     def handle_input(self):
@@ -39,5 +41,9 @@ class InputManager:
                 event_bus.emit("key_up", event.key)
 
         self.last_mouse_pos = pg.mouse.get_pos()
+        wmp = self.camera.screen_to_world(self.last_mouse_pos)
+        x = wmp[0]//(c.BASE_MACHINE_WIDTH/2) * (c.BASE_MACHINE_WIDTH/2)
+        y = wmp[1]//(c.BASE_MACHINE_HEIGHT/2) * (c.BASE_MACHINE_HEIGHT/2)
+        self.last_mouse_pos_snapped = (x, y)
         
 input_manager = InputManager()

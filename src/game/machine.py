@@ -7,10 +7,14 @@ from components.PowerConsumer import PowerConsumer
 from components.RecipeRunner import RecipeRunner
 from components.PowerProducer import PowerProducer
 from components.FluidConsumer import FluidConsumer
+from components.ImporterComponent import ImporterComponent
 from game.simulation_entity import SimulationEntity
 from systems.power_grid import PowerGrid
 
-components_dict = {"RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer, "FluidConsumer": FluidConsumer}
+components_dict = {
+    "RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer, "FluidConsumer": FluidConsumer,
+    "ImporterComponent": ImporterComponent
+}
 
 class Machine(SimulationEntity):
     def __init__(self, machine_id: str, position: tuple[int, int]) -> None:
@@ -86,7 +90,8 @@ class Machine(SimulationEntity):
         if direction_filter == "Any":
             return [node for node in self.nodes if isinstance(node, ItemIONode)]
         else:
-            return [node for node in self.nodes if isinstance(node, ItemIONode) and node.kind == direction_filter]
+            return [node for node in self.nodes if isinstance(node, ItemIONode) and node.direction == direction_filter]
+    
     def get_energy_nodes(self) -> list[EnergyIONode]:
         return [node for node in self.nodes if isinstance(node, EnergyIONode)]
     # Getters for nodes by ID and type

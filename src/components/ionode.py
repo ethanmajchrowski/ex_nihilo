@@ -13,7 +13,6 @@ class IONode:
         self.kind: Literal["item", "energy", "fluid"]
         self.id = node_id
         
-        io_registry.register(self.calculate_abs_pos(), self)
         self.abs_pos = self.calculate_abs_pos()
     
     def calculate_abs_pos(self):
@@ -35,10 +34,10 @@ class ItemIONode(IONode):
         self.quantity = 0
         self.capacity = capacity
         self.kind = kind
+        io_registry.register(self.calculate_abs_pos(), self)
     
-    def can_outupt(self):
-        return self.kind is not None and self.quantity > 0
-        
+    def can_output(self):
+        return self.item is not None and self.quantity > 0
 
 class EnergyIONode(IONode):
     def __init__(self, 
@@ -48,3 +47,4 @@ class EnergyIONode(IONode):
                  offset: tuple[float, float]) -> None:
         super().__init__(node_id, parent_machine, direction, offset)
         self.kind = "energy"
+        io_registry.register(self.calculate_abs_pos(), self)

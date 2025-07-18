@@ -1,8 +1,8 @@
 from typing import Union, Optional, TYPE_CHECKING, cast
 if TYPE_CHECKING:
-    from components.ionode import IONode, ItemIONode, EnergyIONode
+    from components.ionode import ItemIONode, EnergyIONode
 
-_IONodeType = Union["ItemIONode", "EnergyIONode", "IONode"]
+_IONodeType = Union["ItemIONode", "EnergyIONode"]
 
 class _IORegistry:
     def __init__(self) -> None:
@@ -10,6 +10,7 @@ class _IORegistry:
 
     def register(self, position: tuple[int, int], io_node: _IONodeType):
         self._io_nodes[position] = io_node
+        # print(f"Registered {position} as an IONode of type {type(io_node)} with type {io_node.kind}")
 
     def unregister(self, position: tuple[int, int]):
         self._io_nodes.pop(position, None)
