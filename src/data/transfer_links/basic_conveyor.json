@@ -1,0 +1,6 @@
+{
+    "id": "basic_conveyor",
+    "type": "item",
+    "transfer_quantity": 1,
+    "transfer_ticks": 30
+}

@@ -1,25 +1,98 @@
+from json import load
 from typing import Literal
 
-from core.io_registry import io_registry
-from core.entity_manager import entity_manager
-from game.simulation_entity import SimulationEntity
 from components.ionode import ItemIONode
+from core.io_registry import io_registry
+from core.transfer_registry import transfer_registry
+from game.simulation_entity import SimulationEntity
 
 class TransferLink(SimulationEntity):
-    def __init__(self, start_pos: tuple[int, int], end_pos: tuple[int, int], transfer_link_type: str, type: Literal["item", "fluid"]):
+    def __init__(self, start_pos: tuple[int, int], end_pos: tuple[int, int], link_id: str):
         super().__init__("TransferLink", start_pos[0], start_pos[1], True)
         self.end_pos = end_pos
         self.start_pos = start_pos
-
-        self.type = "item"
-        self.transfer_link_type = transfer_link_type
+        self.link_id = link_id
+        
+        with open(f"src/data/transfer_links/{self.link_id}.json") as f:
+            json = load(f)
         
         self.used_this_tick = False
         self.round_robin_index = 0 # used to sort out which input node that overlaps our output node gets the item
 
-        self.transfer_rate: float = 1.0 # units per tick (allowed to be less than 1)
-        self._transfer_buffer = 0.0 # add transfer_rate to transfer_buffer every tick
+        self.type = json["type"]
+        self.transfer_quantity: int = json["transfer_quantity"] # units per transfer_time
+        self.transfer_ticks: int = json["transfer_ticks"] # ticks to complete a transfer
+        self._ticks = 0 # counter to complete transfer_time
         
         self.upstream: list[TransferLink] = []
         self.downstream: list[TransferLink] = []
         
+        transfer_registry.register(self)
+    
+    def find_valid_target(self, item, visited=None) -> None | ItemIONode:
+        if visited is None:
+            visited = set()
+        if self in visited:
+            return None
+        
+        visited.add(self)
+
+        # Check if our end_pos is a valid IONode
+        node = io_registry.get_item_node(self.end_pos)
+        if node and node.item == item:
+            return node
+
+        # Try downstream links in round robin order
+        downstream_len = len(self.downstream)
+        if downstream_len == 0:
+            return None
+
+        start_index = self.round_robin_index
+        for i in range(downstream_len):
+            index = (start_index + i) % downstream_len
+            link = self.downstream[index]
+            if link in visited:
+                continue
+            target = link.find_valid_target(item, visited)
+            if target:
+                # Update round robin index *once a valid path is found*
+                self.round_robin_index = (index + 1) % downstream_len
+                return target
+
+        return None
+    
+    def tick(self):
+        # dont do anything if we have handled this chain this tick OR we have an upstream link
+        # only run on conveyors that start a chain
+        if self.used_this_tick or self.upstream:
+            return
+
+        self._ticks += 1
+        if self._ticks < self.transfer_ticks:
+            return
+        
+        self._ticks -= self.transfer_ticks
+        # get node from our start
+        start_node = io_registry.get_item_node(self.start_pos)
+        if not start_node or not start_node.item:
+            return
+        
+        to_remove = min(start_node.quantity, self.transfer_quantity)
+        if not to_remove:
+            return
+        
+        # attempt to find path
+        target = self.find_valid_target(start_node.item)
+        if target:
+            accepted = min(target.capacity - target.quantity, to_remove)
+            
+            self.used_this_tick = True
+            
+            if target.item is None:
+                target.item = start_node.item
+            if accepted and target.item == start_node.item:
+                target.quantity += accepted
+                start_node.quantity -= accepted
+                
+                if start_node.quantity <= 0:
+                    start_node.item = None
