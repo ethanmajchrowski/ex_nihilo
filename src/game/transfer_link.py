@@ -16,8 +16,7 @@ class TransferLink(SimulationEntity):
         self.start_pos = start_pos
         self.link_id = link_id
         
-        with open(f"src/data/transfer_links/{self.link_id}.json") as f:
-            json = load(f)
+        json = data_registry.transfer_links[self.link_id]
         
         self.used_this_tick = TransferLink.NOT_USED
         self.round_robin_index = 0 # used to sort out which input node that overlaps our output node gets the item

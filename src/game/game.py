@@ -5,7 +5,7 @@ import pygame as pg
 from core.entity_manager import entity_manager
 from core.event_bus import event_bus
 from core.input_manager import input_manager
-from core.recipe_registry import recipe_registry
+from core.data_registry import data_registry
 from core.io_registry import io_registry
 from game.machine import Machine
 from game.transfer_link import TransferLink
@@ -42,7 +42,7 @@ class Game:
         
         # debug/testing entities
         m = Machine("rock_crusher", (0, 0))
-        m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
         entity_manager.add_entity(m)
         
         input_node = m.get_item_node("in_main")
@@ -51,7 +51,7 @@ class Game:
             input_node.quantity += 500
 
         m = Machine("rock_crusher", (0, 5*c.BASE_MACHINE_HEIGHT))
-        m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
         entity_manager.add_entity(m)
         
         input_node = m.get_item_node("in_main")
@@ -60,7 +60,7 @@ class Game:
             input_node.quantity += 500
         
         m = Machine("rock_crusher", (0, 10*c.BASE_MACHINE_HEIGHT))
-        m.components["RecipeRunner"].selected_recipe = recipe_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
         entity_manager.add_entity(m)
         
         input_node = m.get_item_node("in_main")

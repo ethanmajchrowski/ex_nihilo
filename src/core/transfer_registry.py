@@ -8,6 +8,9 @@ class _TransferRegistry:
     def __init__(self) -> None:
         self.link_map: dict[tuple[int, int], list["TransferLink"]] = defaultdict(list)
     
+    def get_links(self, pos: tuple[int, int]) -> list["TransferLink"]:
+        return self.link_map.get(pos, [])
+    
     def register(self, link: "TransferLink"):
         self.link_map[link.start_pos].append(link)
         self.link_map[link.end_pos].append(link)

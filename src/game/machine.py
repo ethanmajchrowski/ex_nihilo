@@ -10,6 +10,7 @@ from components.FluidConsumer import FluidConsumer
 from components.ImporterComponent import ImporterComponent
 from game.simulation_entity import SimulationEntity
 from systems.power_grid import PowerGrid
+from core.data_registry import data_registry
 
 components_dict = {
     "RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer, "FluidConsumer": FluidConsumer,
@@ -19,8 +20,7 @@ components_dict = {
 class Machine(SimulationEntity):
     def __init__(self, machine_id: str, position: tuple[int, int]) -> None:
         self.machine_id = machine_id
-        with open(f"src/data/machines/{self.machine_id}.json") as f:
-            json = load(f)
+        json = data_registry.machines[self.machine_id]
         # Size is in tiles (width, height)
         self.shape: list[tuple[int, int]] = json["footprint"]
         self.center_tile = json["center"]
