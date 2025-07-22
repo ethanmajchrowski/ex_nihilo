@@ -44,9 +44,32 @@ class InputManager:
 
         self.last_mouse_pos = pg.mouse.get_pos()
         wmp = self.camera.screen_to_world(self.last_mouse_pos)
-        x = wmp[0]//(c.BASE_MACHINE_WIDTH/2) * (c.BASE_MACHINE_WIDTH/2)
-        y = wmp[1]//(c.BASE_MACHINE_HEIGHT/2) * (c.BASE_MACHINE_HEIGHT/2)
-        self.last_mouse_pos_snapped = (x, y)
+
+        # Snap to top-left of the tile using half-tile granularity
+        tile_width = c.BASE_MACHINE_WIDTH
+        tile_height = c.BASE_MACHINE_HEIGHT
+        half_width = tile_width / 2
+        half_height = tile_height / 2
+
+        tile_x = int(wmp[0] // half_width * half_width)
+        tile_y = int(wmp[1] // half_height * half_height)
+        self.last_mouse_pos_snapped = (tile_x, tile_y)  # This is the tile top-left corner (snap point)
+
+        # Find closest corner of that tile to actual mouse position
+        closest_corner = (0, 0)
+        closest_dist = float('inf')
+
+        # Check all 4 corners of the tile starting from tile_x, tile_y
+        for i in range(4):
+            dx = (i % 2) * (c.BASE_MACHINE_WIDTH // 2)
+            dy = (i // 2) * (c.BASE_MACHINE_HEIGHT // 2)
+            d = dist(wmp, (tile_x + dx, tile_y + dy))
+            if d < closest_dist:
+                closest_dist = d
+                closest_corner = (tile_x + dx, tile_y + dy)
+
+        self.mouse_pos_closest_corner = closest_corner
+
         
         for event in pg.event.get():
             ui_manager.handle_event(event)

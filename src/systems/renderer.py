@@ -4,9 +4,11 @@ import data.configuration as c
 from core.asset_manager import asset_manager
 from core.entity_manager import entity_manager
 from core.global_inventory import global_inventory
-from systems.camera import Camera
-from core.utils import interpolate_color
 from core.input_manager import input_manager
+from core.tool_manager import tool_manager, LinkTool
+from core.utils import interpolate_color
+from systems.camera import Camera
+
 
 class Renderer:
     def __init__(self) -> None:
@@ -49,10 +51,11 @@ class Renderer:
         surface.fill((30, 30, 30))
         self.draw_cached_background(surface, camera, asset_manager.assets["background"]["grid"])
         
-        tile_rect = pg.Rect(camera.world_to_screen(input_manager.last_mouse_pos_snapped), (c.BASE_MACHINE_WIDTH/2, c.BASE_MACHINE_HEIGHT/2))
+        # tile_rect = pg.Rect(camera.world_to_screen(input_manager.last_mouse_pos_snapped), (c.BASE_MACHINE_WIDTH/2, c.BASE_MACHINE_HEIGHT/2))
         # pg.draw.rect(surface, (60, 60, 60), tile_rect)
-        
-        for machine in entity_manager.get_machines():
+        # pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(input_manager.mouse_pos_closest_corner), 5)
+        machines = entity_manager.get_machines()
+        for machine in machines:
             pos = camera.world_to_screen(machine.position)
             for tile in machine.shape:
                 color = (100, 100, 100)
@@ -61,6 +64,20 @@ class Renderer:
                 pg.draw.rect(surface, color, pg.Rect(
                     pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
+        
+        for link in entity_manager.get_transfer_links():
+            start_size, end_size = 3, 3
+            if input_manager.mouse_pos_closest_corner == link.start_pos: start_size += 2
+            if input_manager.mouse_pos_closest_corner == link.end_pos: end_size += 2
+            on_color = (241, 201, 120) if link.type == "item" else (97, 158, 249)
+            start, end = camera.world_to_screen(link.start_pos), camera.world_to_screen(link.end_pos)
+            color = interpolate_color(link.ticks_since_transfer, 0, 25, on_color, (150, 150, 150))
+
+            pg.draw.aaline(surface, color, start, end, 2)
+            pg.draw.circle(surface, color, (start[0]+start_size//2, start[1]+start_size//2), start_size)
+            pg.draw.circle(surface, color, (end[0]+end_size//2, end[1]+end_size//2), end_size)
+        
+        for machine in machines:
             for node in machine.nodes:
                 size = 3
                 if node is input_manager.hovered_item:
@@ -75,12 +92,14 @@ class Renderer:
                 if node.kind == "fluid":
                     pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), size)
         
-        for link in entity_manager.get_transfer_links():
-            on_color = (241, 201, 120) if link.type == "item" else (97, 158, 249)
-            start, end = camera.world_to_screen(link.start_pos), camera.world_to_screen(link.end_pos)
-            color = interpolate_color(link.ticks_since_transfer, 0, 25, on_color, (150, 150, 150))
-            pg.draw.aaline(surface, color, start, end, 2)
+        if tool_manager.current_tool:
+            if isinstance(tool_manager.current_tool, LinkTool):
+                if tool_manager.current_tool.placing:
+                    pg.draw.aaline(surface, (135, 135, 135), 
+                                   camera.world_to_screen(tool_manager.current_tool.start_pos), 
+                                   camera.world_to_screen(input_manager.mouse_pos_closest_corner), 2)
         
+        # debug labels
         f = self.debug_font.render(str(camera.screen_to_world(mouse_pos)), True, (255, 255, 255))
         surface.blit(f, (10, 10))
         w = f.get_width()

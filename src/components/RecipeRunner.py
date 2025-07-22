@@ -2,7 +2,7 @@ from components.base_component import BaseComponent
 import data.configuration as c
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from core.recipe_registry import Recipe
+    from core.data_registry import Recipe
 
 class RecipeRunner(BaseComponent):
     def __init__(self, parent, args) -> None:

@@ -7,6 +7,7 @@ from core.event_bus import event_bus
 from core.input_manager import input_manager
 from core.data_registry import data_registry
 from core.io_registry import io_registry
+from core.tool_manager import tool_manager
 from game.machine import Machine
 from game.transfer_link import TransferLink
 from logger import logger
@@ -27,6 +28,7 @@ class Game:
         
         # setup system managers
         self.camera = Camera(display_surface.get_size())
+        self.camera.move(-400, -200)
         input_manager.camera = self.camera
         self.simulation_manager = Simulation()
         self.renderer = Renderer()
@@ -71,18 +73,20 @@ class Game:
         # st = Machine("basic_steam_turbine", (4*c.BASE_MACHINE_HEIGHT, -4*c.BASE_MACHINE_HEIGHT))
         # entity_manager.add_entity(st)
         
-        link = TransferLink((0, 144), (100, 50), "basic_conveyor")
-        entity_manager.add_entity(link)
-        link = TransferLink((0, 24), (100, 50), "basic_conveyor")
-        entity_manager.add_entity(link)
-        link = TransferLink((100, 50), (96, 12), "basic_conveyor")
-        entity_manager.add_entity(link)
-        link = TransferLink((100, 50), (200, 100), "basic_conveyor")
-        entity_manager.add_entity(link)
-        link = TransferLink((0, 264), (4*c.BASE_MACHINE_WIDTH, 264), "basic_conveyor")
-        entity_manager.add_entity(link)
-        link = TransferLink((4*c.BASE_MACHINE_WIDTH, 264), (100, 50), "basic_conveyor")
-        entity_manager.add_entity(link)
+        # link = TransferLink((0, 144), (100, 50), "basic_conveyor")
+        # entity_manager.add_entity(link)
+        # link = TransferLink((0, 24), (100, 50), "basic_conveyor")
+        # entity_manager.add_entity(link)
+        # link = TransferLink((100, 50), (96, 12), "basic_conveyor")
+        # entity_manager.add_entity(link)
+        # link = TransferLink((100, 50), (200, 100), "basic_conveyor")
+        # entity_manager.add_entity(link)
+        # link = TransferLink((0, 264), (4*c.BASE_MACHINE_WIDTH, 264), "basic_conveyor")
+        # entity_manager.add_entity(link)
+        # link = TransferLink((4*c.BASE_MACHINE_WIDTH, 264), (100, 50), "basic_conveyor")
+        # entity_manager.add_entity(link)
+        tool_manager.select_tool("link")
+        tool_manager.context.selected_link_type = "basic_conveyor"
         
         im = Machine("importer", (4*c.BASE_MACHINE_HEIGHT, 0))
         entity_manager.add_entity(im)

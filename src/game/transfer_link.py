@@ -5,6 +5,7 @@ from components.ionode import ItemIONode
 from core.io_registry import io_registry
 from core.transfer_registry import transfer_registry
 from game.simulation_entity import SimulationEntity
+from core.data_registry import data_registry
 
 class TransferLink(SimulationEntity):
     NOT_USED = 0
@@ -21,7 +22,7 @@ class TransferLink(SimulationEntity):
         self.used_this_tick = TransferLink.NOT_USED
         self.round_robin_index = 0 # used to sort out which input node that overlaps our output node gets the item
 
-        self.type = json["type"]
+        self.type: Literal['item', 'fluid'] = json["type"]
         self.transfer_quantity: int = json["transfer_quantity"] # units per transfer_time
         self.transfer_ticks: int = json["transfer_ticks"] # ticks to complete a transfer
         self._ticks = 0 # counter to complete transfer_time
