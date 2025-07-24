@@ -10,6 +10,7 @@ class FluidConsumer(BaseComponent):
         self.satisfied = False
     
     def tick(self):
+        # print(self.ionode.item, self.ionode.quantity)
         if not self.ionode or self.ionode.item != self.fluid_type:
             self.satisfied = False
             return

@@ -13,10 +13,11 @@ class RecipeRunner(BaseComponent):
         self.progress = 0
         self.progress_pct = 0.0
     
+    def evaluate_condition(self) -> bool:
+        return self.can_start_recipe()
+    
     def can_start_recipe(self) -> bool:
         if not self.parent.enabled:
-            return False
-        if not self.parent.can_run():
             return False
         if not self.selected_recipe:
             return False
@@ -54,7 +55,7 @@ class RecipeRunner(BaseComponent):
     
     def tick(self):
         just_started = self.is_running
-        if not self.is_running and not self.can_start_recipe():
+        if not self.is_running and not self.parent.can_run():
             self.is_running = False
             self.progress = 0
             return

@@ -11,20 +11,15 @@ class PowerConsumer(BaseComponent):
     def tick(self):
         return
     
-    def evaluate_condition(self) -> bool:
-        # todo make this actually functional
-        return True
-        draw = self.idle_watts
+    def evaluate_power_demand(self):
+        anticipated_power = self.idle_watts
         
         recipe_runner = self.parent.components.get("RecipeRunner")
-        if recipe_runner and recipe_runner.is_running:
-            draw = self.watts_required
+        if recipe_runner and recipe_runner.evaluate_condition():
+            anticipated_power = self.watts_required
         
-        if self.parent.power_grid and self.parent.power_grid.can_supply_wattage(draw, self.voltage):
-            self.parent.power_grid.draw_power(draw)
-            self.has_power = True
-        else:
-            self.has_power = False
-        return self.has_power
+        return anticipated_power
     
+    def evaluate_condition(self) -> bool:
+        return self.has_power
             

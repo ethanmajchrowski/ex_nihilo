@@ -2,20 +2,19 @@ from sys import exit
 
 import pygame as pg
 
+import data.configuration as c
+from core.data_registry import data_registry
 from core.entity_manager import entity_manager
 from core.event_bus import event_bus
 from core.input_manager import input_manager
-from core.data_registry import data_registry
-from core.io_registry import io_registry
 from core.tool_manager import tool_manager
 from game.machine import Machine
-from game.transfer_link import TransferLink
-from logger import logger
+from game.power_cable import PowerCable
 from systems.camera import Camera
 from systems.renderer import Renderer
 from systems.simulation import Simulation
 from ui.ui import UIManager
-import data.configuration as c
+
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
@@ -52,29 +51,37 @@ class Game:
             input_node.item = "item.stone"
             input_node.quantity += 500
 
-        m = Machine("rock_crusher", (0, 5*c.BASE_MACHINE_HEIGHT))
-        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
-        entity_manager.add_entity(m)
+        # m = Machine("rock_crusher", (0, 5*c.BASE_MACHINE_HEIGHT))
+        # m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        # entity_manager.add_entity(m)
         
-        input_node = m.get_item_node("in_main")
+        # input_node = m.get_item_node("in_main")
+        # if input_node:
+        #     input_node.item = "item.stone"
+        #     input_node.quantity += 500
+        
+        # m = Machine("rock_crusher", (0, 10*c.BASE_MACHINE_HEIGHT))
+        # m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        # entity_manager.add_entity(m)
+        
+        # input_node = m.get_item_node("in_main")
+        # if input_node:
+        #     input_node.item = "item.stone"
+        #     input_node.quantity += 500
+        
+        st = Machine("basic_steam_turbine", (4*c.BASE_MACHINE_HEIGHT, -4*c.BASE_MACHINE_HEIGHT))
+        entity_manager.add_entity(st)
+        input_node = st.get_item_node("steam_in")
         if input_node:
-            input_node.item = "item.stone"
-            input_node.quantity += 500
+            input_node.item = "fluid.steam_low_pressure"
+            input_node.quantity += 10000
+        print(f"steam turbine name: {st.name}")
         
-        m = Machine("rock_crusher", (0, 10*c.BASE_MACHINE_HEIGHT))
-        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
-        entity_manager.add_entity(m)
-        
-        input_node = m.get_item_node("in_main")
-        if input_node:
-            input_node.item = "item.stone"
-            input_node.quantity += 500
-        
-        # st = Machine("basic_steam_turbine", (4*c.BASE_MACHINE_HEIGHT, -4*c.BASE_MACHINE_HEIGHT))
-        # entity_manager.add_entity(st)
-        
-        # link = TransferLink((0, 144), (100, 50), "basic_conveyor")
-        # entity_manager.add_entity(link)
+        link = PowerCable((108, -48), (-100, 0), "basic_cable")
+        entity_manager.add_entity(link)
+        link = PowerCable((-100, 0), (24, 0), "basic_cable")
+        entity_manager.add_entity(link)
+        link.dirty = True
         # link = TransferLink((0, 24), (100, 50), "basic_conveyor")
         # entity_manager.add_entity(link)
         # link = TransferLink((100, 50), (96, 12), "basic_conveyor")

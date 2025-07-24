@@ -65,8 +65,12 @@ class Renderer:
                     pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
         
+        for cable in entity_manager.get_power_cables():
+            color = (255, 0, 0) if cable.grid.available_wattage >= 0 else (100, 0, 0)
+            pg.draw.aaline(surface, color, camera.world_to_screen(cable.start_pos), camera.world_to_screen(cable.end_pos), 2)
+        
         for link in entity_manager.get_transfer_links():
-            start_size, end_size = 3, 3
+            start_size, end_size = 2, 2
             if input_manager.mouse_pos_closest_corner == link.start_pos: start_size += 2
             if input_manager.mouse_pos_closest_corner == link.end_pos: end_size += 2
             on_color = (241, 201, 120) if link.type == "item" else (97, 158, 249)
@@ -79,18 +83,19 @@ class Renderer:
         
         for machine in machines:
             for node in machine.nodes:
-                size = 3
+                size = 4
                 if node is input_manager.hovered_item:
                     size += 2
+                pos = camera.world_to_screen(node.abs_pos)
                 if node.kind == "item":
                     if node.direction == "input":
-                        pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), size)
+                        pg.draw.circle(surface, (0, 0, 255), pos, size)
                     if node.direction == "output":
-                        pg.draw.circle(surface, (204, 102, 51), camera.world_to_screen(node.abs_pos), size)
+                        pg.draw.circle(surface, (204, 102, 51), pos, size)
                 if node.kind == "energy":
-                    pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(node.abs_pos), size)
+                    pg.draw.circle(surface, (255, 0, 0), pos, size)
                 if node.kind == "fluid":
-                    pg.draw.circle(surface, (0, 0, 255), camera.world_to_screen(node.abs_pos), size)
+                    pg.draw.circle(surface, (0, 0, 255), pos, size)
         
         if tool_manager.current_tool:
             if isinstance(tool_manager.current_tool, LinkTool):

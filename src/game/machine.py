@@ -1,5 +1,7 @@
 from json import load
-from typing import Any, Optional, Literal
+from typing import Any, Optional, Literal, TYPE_CHECKING
+if TYPE_CHECKING:
+    from game.power_cable import PowerGrid
 
 import data.configuration as c
 from components.ionode import ItemIONode, EnergyIONode
@@ -9,7 +11,6 @@ from components.PowerProducer import PowerProducer
 from components.FluidConsumer import FluidConsumer
 from components.ImporterComponent import ImporterComponent
 from game.simulation_entity import SimulationEntity
-from systems.power_grid import PowerGrid
 from core.data_registry import data_registry
 
 components_dict = {
@@ -29,7 +30,7 @@ class Machine(SimulationEntity):
         super().__init__(name=self.name, x=position[0], y=position[1])
 
         self.position = position
-        self.power_grid: PowerGrid | None = None
+        self.power_grid: "PowerGrid | None" = None
 
         # create IO Nodes
         self.nodes: set[ItemIONode | EnergyIONode] = set()
@@ -77,7 +78,6 @@ class Machine(SimulationEntity):
         for component in self.components.values():
             if hasattr(component, "evaluate_condition"):
                 if not component.evaluate_condition():
-                    print(f"Component failed condition: {component}")
                     return False
 
         return True

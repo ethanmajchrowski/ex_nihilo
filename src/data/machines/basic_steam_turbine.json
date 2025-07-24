@@ -1,6 +1,6 @@
 {
-    "id": "rock_crusher",
-    "name": "Rock Crusher",
+    "id": "basic_steam_turbine",
+    "name": "Basic Steam Turbine",
     "footprint": [
         [0, 1],
         [0, 0], 

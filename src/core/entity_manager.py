@@ -3,6 +3,7 @@ if TYPE_CHECKING:
     from game.simulation_entity import SimulationEntity
 from game.machine import Machine
 from game.transfer_link import TransferLink
+from game.power_cable import PowerCable
 import data.configuration as c
 
 class _EntityManager:
@@ -23,6 +24,12 @@ class _EntityManager:
     
     def get_machines(self):
         return [e for e in self.entities if isinstance(e, Machine)]
+    
+    def get_power_cables(self):
+        return [e for e in self.entities if isinstance(e, PowerCable)]
+
+    def get_machines_with_component(self, component: str):
+        return [e for e in self.get_machines() if e.get_component(component)]
 
     def get_machine_at_position(self, position: tuple[int, int]):
         for machine in self.get_machines():
