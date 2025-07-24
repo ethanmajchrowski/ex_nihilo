@@ -66,7 +66,8 @@ class Renderer:
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
         
         for cable in entity_manager.get_power_cables():
-            color = (255, 0, 0) if cable.grid.available_wattage >= 0 else (100, 0, 0)
+            on_color, off_color = (255, 0, 0), (100, 0, 0)
+            color = interpolate_color(cable.grid.ticks_since_online, 0, 25, on_color, off_color)
             pg.draw.aaline(surface, color, camera.world_to_screen(cable.start_pos), camera.world_to_screen(cable.end_pos), 2)
         
         for link in entity_manager.get_transfer_links():
