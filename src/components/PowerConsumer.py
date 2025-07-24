@@ -13,9 +13,8 @@ class PowerConsumer(BaseComponent):
     
     def evaluate_power_demand(self):
         anticipated_power = self.idle_watts
-        
-        recipe_runner = self.parent.components.get("RecipeRunner")
-        if recipe_runner and recipe_runner.evaluate_condition():
+
+        if self.parent.can_run(power = False):
             anticipated_power = self.watts_required
         
         return anticipated_power

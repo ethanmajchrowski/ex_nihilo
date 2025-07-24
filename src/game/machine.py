@@ -74,8 +74,19 @@ class Machine(SimulationEntity):
             if node.quantity == 0:
                 node.item = None
 
-    def can_run(self) -> bool:
+    def can_run(self, power: bool = True) -> bool:
+        """Checks all machine components to aggregate if that machine can run at this point.
+
+        Args:
+            power (bool, optional): To check the machine's PowerConsumer condition, if present. Defaults to True.
+
+        Returns:
+            bool: If the machine can run.
+        """
         for component in self.components.values():
+            if not power and isinstance(component, PowerConsumer):
+                continue
+            
             if hasattr(component, "evaluate_condition"):
                 if not component.evaluate_condition():
                     return False

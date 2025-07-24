@@ -38,10 +38,14 @@ class PowerGrid:
         for machine in self.connections:
             if "PowerConsumer" in machine.components:
                 assert isinstance(machine.components["PowerConsumer"], PowerConsumer)
-                draw += machine.components["PowerConsumer"].watts_required
+                
+                draw += machine.components["PowerConsumer"].evaluate_power_demand()
+            
             if "PowerProducer" in machine.components:
                 assert isinstance(machine.components["PowerProducer"], PowerProducer)
+                
                 production += machine.components["PowerProducer"].get_output()
+        
         return production - draw
 
     def can_supply_wattage(self, wattage: int, voltage: str):
