@@ -6,6 +6,7 @@ from core.entity_manager import entity_manager
 from core.global_inventory import global_inventory
 from core.input_manager import input_manager
 from core.tool_manager import tool_manager, LinkTool
+from core.io_registry import io_registry
 from core.utils import interpolate_color
 from systems.camera import Camera
 
@@ -66,9 +67,21 @@ class Renderer:
                     c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
         
         for cable in entity_manager.get_power_cables():
+            start_size, end_size = 2, 2
+            if input_manager.mouse_pos_closest_corner == cable.start_pos: start_size += 2
+            if input_manager.mouse_pos_closest_corner == cable.end_pos: end_size += 2
+            
+            start_size = 0 if io_registry.get_node(cable.start_pos) else start_size
+            end_size = 0 if io_registry.get_node(cable.end_pos) else end_size
+            
             on_color, off_color = (255, 0, 0), (100, 0, 0)
+            
             color = interpolate_color(cable.grid.ticks_since_online, 0, 25, on_color, off_color)
-            pg.draw.aaline(surface, color, camera.world_to_screen(cable.start_pos), camera.world_to_screen(cable.end_pos), 2)
+            start, end = camera.world_to_screen(cable.start_pos), camera.world_to_screen(cable.end_pos)
+
+            pg.draw.aaline(surface, color, start, end, 2)
+            pg.draw.circle(surface, color, (start[0]+start_size//2, start[1]+start_size//2), start_size)
+            pg.draw.circle(surface, color, (end[0]+end_size//2, end[1]+end_size//2), end_size)
         
         for link in entity_manager.get_transfer_links():
             start_size, end_size = 2, 2
@@ -77,6 +90,9 @@ class Renderer:
             on_color = (241, 201, 120) if link.type == "item" else (97, 158, 249)
             start, end = camera.world_to_screen(link.start_pos), camera.world_to_screen(link.end_pos)
             color = interpolate_color(link.ticks_since_transfer, 0, 25, on_color, (150, 150, 150))
+
+            start_size = 0 if io_registry.get_node(link.start_pos) else start_size
+            end_size = 0 if io_registry.get_node(link.end_pos) else end_size
 
             pg.draw.aaline(surface, color, start, end, 2)
             pg.draw.circle(surface, color, (start[0]+start_size//2, start[1]+start_size//2), start_size)

@@ -67,7 +67,6 @@ class PowerCable(SimulationEntity):
         self.end_pos = end_pos
         self.start_pos = start_pos
         self.link_id = link_id
-        self.grid: PowerGrid
         
         json = data_registry.transfer_links[self.link_id]
         if json["type"] != "power":
@@ -76,6 +75,7 @@ class PowerCable(SimulationEntity):
         self.dirty = True
         self.connected: set[PowerCable] = set()
         
+        self.grid: PowerGrid = PowerGrid(self.voltage)
         cable_registry.register(self)
     
     def tick(self):

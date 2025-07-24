@@ -1,13 +1,15 @@
 from math import atan2, degrees
 from typing import Literal
 
-from components.ionode import ItemIONode
+from components.ionode import EnergyIONode, ItemIONode
 from core.data_registry import data_registry
 from core.entity_manager import entity_manager
 from core.event_bus import event_bus
 from core.input_manager import input_manager
 from core.io_registry import io_registry
-from game.transfer_link import TransferLink, transfer_registry
+from game.power_cable import PowerCable
+from game.transfer_link import TransferLink
+from core.transfer_registry import transfer_registry, cable_registry
 from logger import logger
 
 
@@ -57,7 +59,12 @@ class LinkTool(Tool):
                 self.start_pos = hovering_item.abs_pos
                 self.type = hovering_item.kind
                 return True
+            if isinstance(hovering_item, EnergyIONode) and selected_link["type"] == "power":
+                self.start_pos = hovering_item.abs_pos
+                self.type = 'energy'
+                return True
 
+        # connect to existing link
         for link in transfer_registry.get_links(input_manager.mouse_pos_closest_corner):
             if link.link_id != selected_link["id"]:
                 print(link.link_id, selected_link["id"])
@@ -65,6 +72,15 @@ class LinkTool(Tool):
             self.start_pos = link.end_pos
             self.type = link.type
             return True
+    
+        for link in cable_registry.get_cables(input_manager.mouse_pos_closest_corner):
+            if link.link_id != selected_link["id"]:
+                print(link.link_id, selected_link["id"])
+                return False
+            self.start_pos = link.end_pos
+            self.type = 'energy'
+            return True
+
         # self.start_pos = world_pos
         # node = io_registry.get_node(self.start_pos)
         # if node:
@@ -93,6 +109,8 @@ class LinkTool(Tool):
             if hovering_item:
                 if isinstance(hovering_item, ItemIONode) and hovering_item.kind == self.type and hovering_item.direction == "input":
                     end_pos = hovering_item.abs_pos
+                if isinstance(hovering_item, EnergyIONode):
+                    end_pos = hovering_item.abs_pos
             else:
                 end_pos = input_manager.mouse_pos_closest_corner
             
@@ -104,7 +122,10 @@ class LinkTool(Tool):
                 self.placing = False
                 return
             
-            entity_manager.add_entity(TransferLink(self.start_pos, end_pos, self.tool_manager.context.selected_link_type))
+            if self.type in ['item', 'fluid']:
+                entity_manager.add_entity(TransferLink(self.start_pos, end_pos, self.tool_manager.context.selected_link_type))
+            else:
+                entity_manager.add_entity(PowerCable(self.start_pos, end_pos, self.tool_manager.context.selected_link_type))
         self.placing = False
 
 #* === ToolManager === *#

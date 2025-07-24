@@ -10,6 +10,7 @@ from core.input_manager import input_manager
 from core.tool_manager import tool_manager
 from game.machine import Machine
 from game.power_cable import PowerCable
+from logger import logger
 from systems.camera import Camera
 from systems.renderer import Renderer
 from systems.simulation import Simulation
@@ -77,11 +78,11 @@ class Game:
             input_node.quantity += 10000
         print(f"steam turbine name: {st.name}")
         
-        link = PowerCable((108, -48), (-100, 0), "basic_cable")
-        entity_manager.add_entity(link)
-        link = PowerCable((-100, 0), (24, 0), "basic_cable")
-        entity_manager.add_entity(link)
-        link.dirty = True
+        # link = PowerCable((108, -48), (-100, 0), "basic_cable")
+        # entity_manager.add_entity(link)
+        # link = PowerCable((-100, 0), (24, 0), "basic_cable")
+        # entity_manager.add_entity(link)
+        # link.dirty = True
         # link = TransferLink((0, 24), (100, 50), "basic_conveyor")
         # entity_manager.add_entity(link)
         # link = TransferLink((100, 50), (96, 12), "basic_conveyor")
@@ -93,7 +94,8 @@ class Game:
         # link = TransferLink((4*c.BASE_MACHINE_WIDTH, 264), (100, 50), "basic_conveyor")
         # entity_manager.add_entity(link)
         tool_manager.select_tool("link")
-        tool_manager.context.selected_link_type = "basic_conveyor"
+        # tool_manager.context.selected_link_type = "basic_conveyor"
+        # tool_manager.context.selected_link_type = "basic_cable"
         
         im = Machine("importer", (4*c.BASE_MACHINE_HEIGHT, 0))
         entity_manager.add_entity(im)
@@ -122,28 +124,20 @@ class Game:
         exit()
     
     def debug_keys(self, key):
-        if key == pg.K_g:
-            input_node = entity_manager.get_machine_at_position((0, 0))
-            if not input_node:
-                return
-            input_node = input_node.get_item_node("in_main")
-            if input_node:
-                input_node.item = "item.stone"
-                input_node.quantity += 1
-        if key == pg.K_h:
-            input_node = entity_manager.get_machine_at_position((200, 0))
-            if input_node: 
-                input_node = input_node.get_item_node("steam_in")
-                if input_node:
-                    input_node.item = "fluid.steam_low_pressure"
-                    input_node.quantity += 100
-        if key == pg.K_j:
-            input_node = entity_manager.get_machine_at_position((300, 0))
-            if input_node: 
-                input_node = input_node.get_item_node("item_in")
-                if input_node:
-                    input_node.item = "item.stone"
-                    input_node.quantity += 5
+        if key == pg.K_1:
+            if tool_manager.context.selected_link_type != "basic_conveyor":
+                tool_manager.context.selected_link_type = "basic_conveyor"
+                logger.debug("selected basic_conveyor")
+            else:
+                logger.debug("deselected tool_manager selected_link_type")
+                tool_manager.context.selected_link_type = None
+        if key == pg.K_2:
+            if tool_manager.context.selected_link_type != "basic_cable":
+                tool_manager.context.selected_link_type = "basic_cable"
+                logger.debug("selected basic_cable")
+            else:
+                logger.debug("deselected tool_manager selected_link_type")
+                tool_manager.context.selected_link_type = None
         # if key == pg.K_k:
         #     input_node = entity_manager.get_machine_at_position((0, 0))
         #     if not input_node:

@@ -65,5 +65,8 @@ class _CableRegistry():
         
         self.cable_map[cable.start_pos].remove(cable)
         self.cable_map[cable.end_pos].remove(cable)
+    
+    def get_cables(self, pos: tuple[int, int]) -> list["PowerCable"]:
+        return self.cable_map.get(pos, [])
 
 cable_registry = _CableRegistry()
