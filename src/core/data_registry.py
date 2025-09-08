@@ -20,6 +20,7 @@ class _DataRegistry:
         self.recipes: dict[str, Recipe] = self.load_recipes()
         self.machines: dict[str, dict] = self.load_data("machines")
         self.transfer_links: dict[str, dict] = self.load_data("transfer_links")
+        self.resource_nodes: dict[str, dict] = self.load_data("resource_nodes")
 
     def load_data(self, data_type):
         data = {}

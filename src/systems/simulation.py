@@ -38,20 +38,20 @@ class Simulation:
             ticked_entities.add(machine)
 
         # Tick power cables and grids (rebuilds grids if dirty, collects available wattage)
+        # We tick grids here so we which grids are able to run
         ticked_power_grids = set()
         for cable in entity_manager.get_power_cables():
             cable.tick()
             ticked_entities.add(cable)
             if cable.grid not in ticked_power_grids:
                 cable.grid.tick()
-                # print(cable.grid.available_wattage)
                 ticked_power_grids.add(cable.grid)
-        # print(len(ticked_power_grids))
         
         for machine in entity_manager.get_machines_with_component("PowerConsumer"):
             machine.tick()
             ticked_entities.add(machine)
         
+        # Tick any other missed machines
         for other_machine in entity_manager.get_machines():
             if other_machine not in ticked_entities:
                 other_machine.tick()

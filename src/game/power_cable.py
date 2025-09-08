@@ -19,7 +19,7 @@ class PowerGrid:
         self.voltage = voltage
         self.connections: set["Machine"] = set()
         self.available_wattage = 0
-        # if entity_manager.get_power_cables()
+
         self.ticks_since_online = 0
     
     def tick(self):
@@ -38,22 +38,28 @@ class PowerGrid:
     
     def add_machine(self, machine: "Machine"):
         self.connections.add(machine)
+        machine.power_grid = self
     
     def calculate_available_wattage(self) -> int:
+        return self.calculate_production() - self.calculate_draw()
+
+    def calculate_draw(self) -> int:
         draw = 0
-        production = 0
         for machine in self.connections:
             if "PowerConsumer" in machine.components:
                 assert isinstance(machine.components["PowerConsumer"], PowerConsumer)
                 
                 draw += machine.components["PowerConsumer"].evaluate_power_demand()
-            
+        return draw
+
+    def calculate_production(self) -> int:
+        production = 0
+        for machine in self.connections:
             if "PowerProducer" in machine.components:
                 assert isinstance(machine.components["PowerProducer"], PowerProducer)
                 
                 production += machine.components["PowerProducer"].get_output()
-        
-        return production - draw
+        return production
 
     def can_supply_wattage(self, wattage: int, voltage: str):
         if voltage != self.voltage:

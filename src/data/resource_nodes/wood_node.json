@@ -1,0 +1,10 @@
+{
+    "id": "wood_node",
+    "drop_table": {
+        "item.wood": {
+            "count": [1, 3],
+            "chance": 1.0,
+            "requires_automation": false
+        }
+    }
+}

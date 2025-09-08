@@ -1,0 +1,15 @@
+{
+    "id": "ground_node",
+    "drop_table": {
+        "item.stone": {
+            "count": [1, 2],
+            "chance": 0.75,
+            "requires_automation": false
+        },
+        "item.gravel": {
+            "count": [1, 3],
+            "chance": 0.5,
+            "requires_automation": false
+        }
+    }
+}
