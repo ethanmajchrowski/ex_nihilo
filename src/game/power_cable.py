@@ -23,49 +23,42 @@ class PowerGrid:
         self.ticks_since_online = 0
     
     def tick(self):
-        self.available_wattage = self.calculate_available_wattage()
-
+        self.available_wattage = 0
         for machine in self.connections:
-            if "PowerConsumer" in machine.components:
-                assert isinstance(machine.components["PowerConsumer"], PowerConsumer)
-                machine.components["PowerConsumer"].has_power = self.available_wattage >= 0
+            producer = machine.get_component("PowerProducer")
+            if not producer:
+                continue
+            self.available_wattage += producer.current_buffer
         
-        if self.available_wattage < 0:
-            if self.ticks_since_online < 25:
-                self.ticks_since_online += 1
+        # for machine in self.connections:
+        #     if "PowerConsumer" in machine.components:
+        #         assert isinstance(machine.components["PowerConsumer"], PowerConsumer)
+        #         machine.components["PowerConsumer"].has_power = self.available_wattage >= 0
+            
+        if 0 < self.available_wattage < 25:
+            self.ticks_since_online += 0
         else:
             self.ticks_since_online = 0
+    
+    def draw_power(self, watts: int) -> bool:
+        if self.available_wattage >= watts:
+            self.available_wattage -= watts
+            to_remove = watts
+            for machine in self.connections:
+                producer = machine.get_component("PowerProducer")
+                if not producer:
+                    continue
+                remove = min(to_remove, producer.current_buffer)
+                producer.current_buffer -= remove
+                to_remove -= remove
+                if to_remove == 0:
+                    break
+            return True
+        return False
     
     def add_machine(self, machine: "Machine"):
         self.connections.add(machine)
         machine.power_grid = self
-    
-    def calculate_available_wattage(self) -> int:
-        return self.calculate_production() - self.calculate_draw()
-
-    def calculate_draw(self) -> int:
-        draw = 0
-        for machine in self.connections:
-            if "PowerConsumer" in machine.components:
-                assert isinstance(machine.components["PowerConsumer"], PowerConsumer)
-                
-                draw += machine.components["PowerConsumer"].evaluate_power_demand()
-        return draw
-
-    def calculate_production(self) -> int:
-        production = 0
-        for machine in self.connections:
-            if "PowerProducer" in machine.components:
-                assert isinstance(machine.components["PowerProducer"], PowerProducer)
-                
-                production += machine.components["PowerProducer"].get_output()
-        return production
-
-    def can_supply_wattage(self, wattage: int, voltage: str):
-        if voltage != self.voltage:
-            return False
-        
-        return self.available_wattage - wattage >= 0
 
 class PowerCable(SimulationEntity):
     def __init__(self, start_pos: tuple[int, int], end_pos: tuple[int, int], link_id: str):

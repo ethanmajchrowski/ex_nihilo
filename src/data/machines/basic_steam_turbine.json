@@ -8,14 +8,16 @@
     ],
     "center": [0, 0],
     "components": {
-        "FluidConsumer": {
-            "fluid_type": "fluid.steam_low_pressure",
-            "consumption_rate": 5,
-            "ionode_id": "steam_in"
-        },
         "PowerProducer": {
             "watts": 2000,
-            "voltage": "LV"
+            "voltage": "LV",
+            "internal_buffer_size": 20000
+        },
+        "RecipeRunner": {
+            "capabilities": [
+                "turbine"
+            ],
+            "forced_recipe": "steam_to_power"
         }
     },
     "ionodes": [

@@ -6,20 +6,21 @@ class PowerProducer(BaseComponent):
         self.watts: int = args["watts"]
         self.tier: str = args["voltage"]
         self.online = False  # optional (e.g. for fuel machines)
+        
+        self.max_internal_buffer: int = args["internal_buffer_size"] # internal storage buffer
+        self.current_buffer: int = 0
 
     def tick(self):
         if self.can_produce():
             self.online = True
         else:
             self.online = False
+        # print(self.current_buffer, self.max_internal_buffer)
 
     def can_produce(self):
-        # e.g., check FuelConsumer or RecipeRunner or solar conditions
-        fluid_consumer = self.parent.get_component("FluidConsumer")
-        if fluid_consumer and not fluid_consumer.satisfied:
-            return False
-        
-        return True
+        return self.current_buffer > 0
 
-    def get_output(self):
-        return self.watts if self.online else 0
+    def draw_from_buffer(self, watts: int) -> int:
+        draw = min(self.current_buffer, watts)
+        self.current_buffer -= draw
+        return draw

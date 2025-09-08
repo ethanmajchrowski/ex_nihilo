@@ -8,13 +8,12 @@ from components.ionode import ItemIONode, EnergyIONode
 from components.PowerConsumer import PowerConsumer
 from components.RecipeRunner import RecipeRunner
 from components.PowerProducer import PowerProducer
-from components.FluidConsumer import FluidConsumer
 from components.ImporterComponent import ImporterComponent
 from game.simulation_entity import SimulationEntity
 from core.data_registry import data_registry
 
 components_dict = {
-    "RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer, "FluidConsumer": FluidConsumer,
+    "RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer,
     "ImporterComponent": ImporterComponent
 }
 
@@ -54,6 +53,7 @@ class Machine(SimulationEntity):
             assert isinstance(node, ItemIONode | EnergyIONode)
             self.nodes.add(node)
 
+        # Assign machine components
         self.components: dict[str, Any] = {}
         for component_name, args in json["components"].items():
             comp = components_dict.get(component_name)

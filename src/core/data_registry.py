@@ -2,6 +2,8 @@ from json import load
 from os import listdir
 from dataclasses import dataclass
 from logger import logger
+import data.configuration as c
+from typing import Literal
 
 @dataclass
 class Recipe:
@@ -11,6 +13,7 @@ class Recipe:
     outputs: dict[str, int]
     required_capabilities: list[str]
     duration: float
+    output_type: Literal["item", "energy"]
     
     def __hash__(self):
         return 0
@@ -45,8 +48,17 @@ class _DataRegistry:
         for recipe in all_recipes:
             with open(f"src/data/recipes/{recipe}") as f:
                 json = load(f)
-                r = Recipe(json["id"], json["name"], json["inputs"], json["outputs"], json["required_capabilities"], json["duration"])
+                recipe_duration_ticks = 0
+                if "duration" in json:
+                    recipe_duration_ticks = json["duration"] * c.SIMULATION_TICKS_PER_SECOND
+                elif "ticks" in json:
+                    recipe_duration_ticks = json["ticks"]
+                else:
+                    raise ValueError("Recipe JSON must have duration (s) or ticks to be parsed.")
+
+                r = Recipe(json["id"], json["name"], json["inputs"], json["outputs"], json["required_capabilities"], recipe_duration_ticks, json["type"])
                 recipes[r.id] = r
+                logger.info(f"Loaded recipe {r.id} data")
         return recipes
     
     def get_compatible_recipes(self, capabilities: list[str]):

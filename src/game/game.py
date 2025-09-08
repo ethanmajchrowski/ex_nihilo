@@ -76,7 +76,7 @@ class Game:
         if input_node:
             input_node.item = "fluid.steam_low_pressure"
             input_node.quantity += 1000000
-        print(f"steam turbine name: {st.name}")
+        # print(f"steam turbine name: {st.name}")
         
         # link = PowerCable((108, -48), (-100, 0), "basic_cable")
         # entity_manager.add_entity(link)

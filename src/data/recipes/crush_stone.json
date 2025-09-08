@@ -1,6 +1,7 @@
 {
     "id": "crush_stone",
     "name": "Crush Stone",
+    "type": "item",
     "inputs": {
         "item.stone": 1
     },

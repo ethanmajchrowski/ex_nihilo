@@ -9,7 +9,9 @@ class PowerConsumer(BaseComponent):
         self.has_power = False
     
     def tick(self):
-        return
+        if self.parent.power_grid:
+            self.has_power = self.parent.power_grid.draw_power(self.evaluate_power_demand())
+            # print(self.has_power)
     
     def evaluate_power_demand(self):
         anticipated_power = self.idle_watts

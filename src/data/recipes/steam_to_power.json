@@ -1,0 +1,15 @@
+{
+    "id": "steam_to_power",
+    "name": "Steam Power Generation",
+    "type": "energy",
+    "inputs": {
+        "fluid.steam_low_pressure": 1
+    },
+    "outputs": {
+        "energy.LV": 2000
+    },
+    "required_capabilities": [
+        "turbine"
+    ],
+    "ticks": 1
+}
