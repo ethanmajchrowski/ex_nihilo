@@ -2,14 +2,14 @@ from math import atan2, degrees
 from typing import Literal
 
 from components.ionode import EnergyIONode, ItemIONode
-from core.data_registry import data_registry
-from core.entity_manager import entity_manager
-from core.event_bus import event_bus
-from core.input_manager import input_manager
-from core.io_registry import io_registry
+from infrastructure.data_registry import data_registry
+from infrastructure.entity_manager import entity_manager
+from infrastructure.event_bus import event_bus
+from infrastructure.input_manager import input_manager
+from infrastructure.io_registry import io_registry
 from game.power_cable import PowerCable
 from game.transfer_link import TransferLink
-from core.transfer_registry import transfer_registry, cable_registry
+from infrastructure.transfer_registry import transfer_registry, cable_registry
 from logger import logger
 
 

@@ -1,7 +1,7 @@
 import pygame as pg
-from core.event_bus import event_bus
-from core.io_registry import io_registry
-from core.entity_manager import entity_manager
+from infrastructure.event_bus import event_bus
+from infrastructure.io_registry import io_registry
+from infrastructure.entity_manager import entity_manager
 from math import dist
 import data.configuration as c
 
