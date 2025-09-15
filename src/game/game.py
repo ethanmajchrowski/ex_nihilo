@@ -3,11 +3,11 @@ from sys import exit
 import pygame as pg
 
 import data.configuration as c
-from core.data_registry import data_registry
-from core.entity_manager import entity_manager
-from core.event_bus import event_bus
-from core.input_manager import input_manager
-from core.tool_manager import tool_manager
+from infrastructure.data_registry import data_registry
+from infrastructure.entity_manager import entity_manager
+from infrastructure.event_bus import event_bus
+from infrastructure.input_manager import input_manager
+from infrastructure.tool_manager import tool_manager
 from game.machine import Machine
 from game.power_cable import PowerCable
 from logger import logger

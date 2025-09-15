@@ -10,7 +10,7 @@ from components.RecipeRunner import RecipeRunner
 from components.PowerProducer import PowerProducer
 from components.ImporterComponent import ImporterComponent
 from game.simulation_entity import SimulationEntity
-from core.data_registry import data_registry
+from infrastructure.data_registry import data_registry
 
 components_dict = {
     "RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer,
@@ -63,7 +63,6 @@ class Machine(SimulationEntity):
                 )
 
             self.components[component_name] = comp(self, args)
-
 
     def tick(self):
         for component in self.components.values():

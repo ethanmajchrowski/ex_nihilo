@@ -1,5 +1,5 @@
 from typing import Literal, TYPE_CHECKING
-from core.io_registry import io_registry
+from infrastructure.io_registry import io_registry
 import data.configuration as c
 if TYPE_CHECKING:
     from game.machine import Machine

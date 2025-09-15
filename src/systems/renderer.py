@@ -1,13 +1,13 @@
 import pygame as pg
 
 import data.configuration as c
-from core.asset_manager import asset_manager
-from core.entity_manager import entity_manager
-from core.global_inventory import global_inventory
-from core.input_manager import input_manager
-from core.tool_manager import tool_manager, LinkTool
-from core.io_registry import io_registry
-from core.utils import interpolate_color
+from infrastructure.asset_manager import asset_manager
+from infrastructure.entity_manager import entity_manager
+from infrastructure.global_inventory import global_inventory
+from infrastructure.input_manager import input_manager
+from infrastructure.tool_manager import tool_manager, LinkTool
+from infrastructure.io_registry import io_registry
+from infrastructure.utils import interpolate_color
 from systems.camera import Camera
 
 

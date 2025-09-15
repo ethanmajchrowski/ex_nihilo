@@ -1,4 +1,4 @@
-from core.entity_manager import entity_manager
+from infrastructure.entity_manager import entity_manager
 from logger import logger
 import data.configuration as c
 

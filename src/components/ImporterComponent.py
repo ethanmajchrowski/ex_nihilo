@@ -1,5 +1,5 @@
 from components.base_component import BaseComponent
-from core.global_inventory import global_inventory
+from infrastructure.global_inventory import global_inventory
 
 class ImporterComponent(BaseComponent):
     def __init__(self, parent, args: dict) -> None:

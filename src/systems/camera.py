@@ -1,4 +1,4 @@
-from core.input_manager import input_manager
+from infrastructure.input_manager import input_manager
 import pygame as pg
 
 class Camera:

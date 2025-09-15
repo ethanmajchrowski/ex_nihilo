@@ -1,9 +1,9 @@
 from components.base_component import BaseComponent
 import data.configuration as c
 from typing import TYPE_CHECKING
-from core.data_registry import data_registry
+from infrastructure.data_registry import data_registry
 if TYPE_CHECKING:
-    from core.data_registry import Recipe
+    from infrastructure.data_registry import Recipe
     from components.PowerProducer import PowerProducer
 
 class RecipeRunner(BaseComponent):
@@ -152,8 +152,6 @@ class RecipeRunner(BaseComponent):
             assert isinstance(power_producer, "PowerProducer")
         
         power_producer.current_buffer += sum(self.selected_recipe.outputs.values())
-        
-        print(f"made energy {power_producer.current_buffer}/{power_producer.max_internal_buffer}, run times: {1000000-self.parent.get_item_nodes('input')[0].quantity}")
     
     def start_recipe(self):
         if self.selected_recipe:

@@ -1,4 +1,4 @@
-from core.data_registry import data_registry
+from infrastructure.data_registry import data_registry
 import data.configuration as c
 from logger import logger
 

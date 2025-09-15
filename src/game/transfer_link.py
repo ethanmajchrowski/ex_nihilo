@@ -2,10 +2,10 @@ from json import load
 from typing import Literal, Optional
 
 from components.ionode import ItemIONode
-from core.io_registry import io_registry
-from core.transfer_registry import transfer_registry
+from infrastructure.io_registry import io_registry
+from infrastructure.transfer_registry import transfer_registry
 from game.simulation_entity import SimulationEntity
-from core.data_registry import data_registry
+from infrastructure.data_registry import data_registry
 
 class TransferLink(SimulationEntity):
     NOT_USED = 0

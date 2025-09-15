@@ -1,5 +1,12 @@
 import pygame as pg
 import data.configuration as c
+from game.machine import Machine
+from infrastructure.input_manager import input_manager
+from infrastructure.data_registry import data_registry
+from components.RecipeRunner import RecipeRunner
+from components.PowerProducer import PowerProducer
+from components.PowerConsumer import PowerConsumer
+
 
 from logger import logger
 
@@ -633,43 +640,224 @@ class UIHotbar(UIElement):
 # #         color=(255, 255, 255))
 # #         surface.blit(txt_surf, (self.rect.x + 8, self.rect.y + 48))
 
-# class UIMachineConfig(UIElement):
-#     def __init__(self, game: "Game", machine: Machine, mouse_pos: tuple[int, int]):
-#         self.rect = pg.Rect(0, 0, 300, 250)
-#         self.game = game
-#         self.machine = machine
-#         self.rect.topleft = mouse_pos
-#         super().__init__(self.rect, True)
-        
-#         self.font = pg.font.SysFont("Arial", 16)
-        
-#         self.recipes_start = 0
-#         self.recipes_end = 1
-#         self.row_height = 40
-    
-#     def draw_self(self, surface):
-#         pg.draw.rect(surface, (60, 60, 60), self.rect, border_radius=5)
-#         global_rect = self.global_rect()
-        
-#         txt = self.font.render("Config", antialias=True, color=(255, 255, 255))
-#         surface.blit(txt, global_rect.move(5, 5))
-    
-#     def handle_event(self, event):
-#         if event.type == pg.MOUSEMOTION:
-#             if not self.rect.collidepoint(event.pos):
-#                 print("kill uiconfig")
-#                 self.visible = False
-#                 self.game.ui_manager.elements.remove(self)
-#                 del(self)
+class UIMachineConfig(UIElement):
+    def __init__(self, parent: "UIMachineContextsManager", machine: Machine, mouse_pos: tuple[int, int]):
+        self.rect = pg.Rect(0, 0, 400, 250)
+        self.machine = machine
+        self.parent = parent
 
+        self.rect.topleft = mouse_pos
+        super().__init__(self.rect, True)
+        
+        self.font = pg.font.SysFont("Arial", 16)
+        
+        self.recipes_start = 0
+        self.recipes_end = 1
+        self.row_height = 40
+    
+    def draw_self(self, surface: pg.Surface):
+        pg.draw.rect(surface, (60, 60, 60), self.rect, border_radius=5)
+        global_rect = self.global_rect()
+        
+        txt = self.font.render(self.machine.name, antialias=True, color=(255, 255, 255))
+        surface.blit(txt, global_rect.move(5, 5))
+        
+        recipe_text = "N/A"
+        recipe_component = self.machine.get_component("RecipeRunner")
+        if recipe_component:
+            recipe_text = recipe_component.selected_recipe.name
+        txt = self.font.render(f"Recipe: {recipe_text}", antialias=True, color=(255, 255, 255))
+        surface.blit(txt, global_rect.move(5, 5+txt.get_height()*1))
+        
+        # Draw inputs column
+        inputs_rect = pg.Rect(global_rect.topleft, (global_rect.width * 0.4, 180)).move(5, 45)
+        pg.draw.rect(surface, (100, 100, 100), inputs_rect, border_radius=5)
+        txt = self.font.render(f"Inputs", antialias=True, color=(255, 255, 255))
+        surface.blit(txt, inputs_rect.move(inputs_rect.width//2-txt.get_width()//2, 3))
+
+        # Draw outputs column
+        outputs_rect = pg.Rect(global_rect.topleft, (global_rect.width * 0.4, 180)).move(global_rect.width-5-(global_rect.width*0.4), 45)
+        pg.draw.rect(surface, (100, 100, 100), outputs_rect, border_radius=5)
+        txt = self.font.render(f"Outputs", antialias=True, color=(255, 255, 255))
+        surface.blit(txt, outputs_rect.move(outputs_rect.width//2-txt.get_width()//2, 3))
+        
+        # Draw progress bar
+        bar_bg = pg.Rect(global_rect.topleft, (60, 20)).move((global_rect.width//2)-30, global_rect.height//2)
+        pg.draw.rect(surface, (75, 75, 75), bar_bg, border_radius=5)
+        progress_bar_width = 60
+        if recipe_component:
+            progress_bar_width = 60 * recipe_component.progress_pct
+        
+        bar_progress = pg.Rect(global_rect.topleft, (progress_bar_width, 20)).move((global_rect.width//2)-30, global_rect.height//2)
+        pg.draw.rect(surface, (150, 150, 150), bar_progress, border_radius=5)
+        
+        bar_txt = ""
+        if recipe_component:
+            bar_txt = f"{int(recipe_component.progress_pct * 100)}%"
+            
+        bar_txt = self.font.render(bar_txt, antialias=True, color=(255, 255, 255))
+        surface.blit(bar_txt, (bar_bg.centerx-(bar_txt.width//2), bar_bg.centery-(bar_txt.height//2)))
+        
+        #TODO more UI!
+        # need energy indication in the bottom right, recipe time in the bottom center, and a disable/enable button on the bottom left
+        # also, need to dynamically display inputs/outputs in their respective columns!
+        # see doodle on tablet :)
+        
+        # Input item visuals
+        # t_list = [1, 2, 3, 4]
+        y = 2 + txt.height
+        if recipe_component:
+            assert isinstance(recipe_component, RecipeRunner)
+            if recipe_component.selected_recipe:
+                for item, count in recipe_component.selected_recipe.inputs.items():
+                    r = pg.Rect((inputs_rect.move(2, y).topleft), (20, 20))
+                    pg.draw.rect(surface, (255, 0, 0), r, border_radius=1)
+                    
+                    txt = item.split(".")[-1].title()
+                    txt = txt.replace("_", " ")
+                    txt = self.font.render(txt, True, (255, 255, 255))
+                    surface.blit(txt, (r.right + 2, r.top-2))
+                    
+                    machine_item_count = 0
+                    for node in self.machine.get_item_nodes('input'):
+                        if node.item == item:
+                            machine_item_count += node.quantity
+                    txt = self.font.render(f"{machine_item_count}/{count}", True, (255, 255, 255))
+                    surface.blit(txt, (r.right + 2, r.top-2 + txt.height))
+                    
+                    y += 25
+        else:
+            items = {}
+            for node in self.machine.get_item_nodes('input'):
+                if not node.item:
+                    continue
+                if node.item not in items:
+                    items[node.item] = node.quantity
+                else:
+                    items[node.item] += node.quantity
+        
+            for item, count in items.items():
+                r = pg.Rect((inputs_rect.move(2, y).topleft), (20, 20))
+                pg.draw.rect(surface, (255, 0, 0), r, border_radius=1)
+                
+                txt = self.font.render(item.split(".")[-1].title(), True, (255, 255, 255))
+                surface.blit(txt, (r.right + 2, r.top))
+                
+                txt = self.font.render(f"{count}", True, (255, 255, 255))
+                surface.blit(txt, (r.right + 2, r.top + txt.height))
+                
+                y += 25
+                
+        # Output item visuals
+        # t_list = [1, 2, 3, 4]
+        y = 2 + txt.height
+        if recipe_component:
+            assert isinstance(recipe_component, RecipeRunner)
+            if recipe_component.selected_recipe:
+                if recipe_component.selected_recipe.output_type == "item":
+                    # for item in t_list:
+                    for item, count in recipe_component.selected_recipe.outputs.items():
+                        r = pg.Rect((outputs_rect.move(2, y).topleft), (20, 20))
+                        pg.draw.rect(surface, (255, 0, 0), r, border_radius=1)
+                        
+                        txt = self.font.render(item.split(".")[-1].title(), True, (255, 255, 255))
+                        surface.blit(txt, (r.right + 2, r.top))
+                        
+                        machine_item_count = 0
+                        for node in self.machine.get_item_nodes('output'):
+                            if node.item == item:
+                                machine_item_count += node.quantity
+                        txt = self.font.render(f"{machine_item_count}/{count}", True, (255, 255, 255))
+                        surface.blit(txt, (r.right + 2, r.top + txt.height))
+                        
+                        y += 25
+                elif recipe_component.selected_recipe.output_type == "energy":
+                    for item, count in recipe_component.selected_recipe.outputs.items():
+                        r = pg.Rect((outputs_rect.move(2, y).topleft), (20, 20))
+                        pg.draw.rect(surface, (255, 0, 0), r, border_radius=1)
+                        
+                        txt = self.font.render(f"{item.split(".")[-1].upper()} power", True, (255, 255, 255))
+                        surface.blit(txt, (r.right + 2, r.top))
+                        
+                        power_producer = self.machine.get_component("PowerProducer")
+                        assert isinstance(power_producer, PowerProducer)
+                        
+                        joules = power_producer.current_buffer // 60
+
+                        txt = self.font.render(f"{joules}/{power_producer.max_internal_buffer // 60} J", True, (255, 255, 255))
+                        surface.blit(txt, (r.right + 2, r.top + txt.height))
+                        
+                        y += 25
+        
+        # Power button?
+        
+        
+        
+        # Wattage use
+        power_consumer = self.machine.get_component("PowerConsumer")
+        if power_consumer:
+            assert isinstance(power_consumer, PowerConsumer)
+
+            color = (255, 100, 100)
+            if power_consumer.has_power:
+                color = (255, 255, 255)
+
+            txt = self.font.render(f"{power_consumer.evaluate_power_demand()} W", True, color)
+            txt_rect = txt.get_rect()
+            txt_rect.bottom = global_rect.bottom
+            txt_rect.right = global_rect.right
+            surface.blit(txt, txt_rect)
+        # recipe duration
+        if recipe_component:
+            assert isinstance(recipe_component, RecipeRunner)
+            if recipe_component.selected_recipe:
+                txt = self.font.render(f"{recipe_component.selected_recipe.duration}t", True, (255, 255, 255))
+                txt_rect = txt.get_rect()
+                txt_rect.bottom = global_rect.bottom
+                txt_rect.centerx = global_rect.centerx
+                surface.blit(txt, txt_rect)
+
+class UIMachineContextsManager(UIElement):
+    def __init__(self) -> None:
+        super().__init__((0, 0, 0, 0))
+        self.current_context = None
+    
+    def draw_self(self, surface):
+        if self.current_context:
+            self.current_context.draw_self(surface)
+    
+    def clear_context(self):
+        del(self.current_context)
+        self.current_context = None
+    
+    def handle_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            hovered_machine = input_manager.hovered_item
+            if isinstance(hovered_machine, Machine):
+                # Create new machine context for this specific machine
+                del(self.current_context)
+                self.current_context = UIMachineConfig(self, hovered_machine, event.pos)
+            if self.current_context:
+                if not self.current_context.rect.collidepoint(event.pos):
+                    self.clear_context()
+                    
+        if event.type == pg.KEYDOWN and event.key in [pg.K_w, pg.K_a, pg.K_s, pg.K_d]:
+            self.clear_context()
+        
+        if self.current_context:
+            self.current_context.handle_event(event)
+    
 class UIManager:
     def __init__(self):
         self.elements: list[UIElement] = []
         self.windows: list[UIWindow] = []  # for external access if needed
+        # New UI
+        self.machine_contexts_manager = UIMachineContextsManager()
+        self.elements.append(self.machine_contexts_manager)
         # Toolbar
         # self.toolbar = UIToolbar(screen_width=c.DISPLAY_WIDTH)
         # self.add(self.toolbar)
-
+        
         # Windows
         # toolbars = ["Inventory", "Crafting", "Recipes", "Statistics"]
         # for i in range(4):

@@ -5,9 +5,9 @@ if TYPE_CHECKING:
 
 from components.PowerConsumer import PowerConsumer
 from components.PowerProducer import PowerProducer
-from core.data_registry import data_registry
-from core.io_registry import io_registry
-from core.transfer_registry import cable_registry
+from infrastructure.data_registry import data_registry
+from infrastructure.io_registry import io_registry
+from infrastructure.transfer_registry import cable_registry
 from game.simulation_entity import SimulationEntity
 
 
