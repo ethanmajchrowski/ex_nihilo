@@ -10,12 +10,43 @@ from infrastructure.input_manager import input_manager
 from infrastructure.tool_manager import tool_manager
 from game.machine import Machine
 from game.power_cable import PowerCable
+from game.transfer_link import TransferLink
 from logger import logger
 from systems.camera import Camera
 from systems.renderer import Renderer
 from systems.simulation import Simulation
 from ui.ui import UIManager
 
+def optimization_test():
+    for i in range(100):
+        m = Machine("rock_crusher", (i * 4 * c.BASE_MACHINE_WIDTH, 0))
+        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
+        entity_manager.add_entity(m)
+        
+        input_node = m.get_item_node("in_main")
+        if input_node:
+            input_node.item = "item.stone"
+            input_node.quantity += 500
+    
+        st = Machine("basic_steam_turbine", (i*4*c.BASE_MACHINE_WIDTH, -4*c.BASE_MACHINE_HEIGHT))
+        entity_manager.add_entity(st)
+        input_node = st.get_item_node("steam_in")
+        if input_node:
+            input_node.item = "fluid.steam_low_pressure"
+            input_node.quantity += 1000000
+    
+        im = Machine("importer", (i*4*c.BASE_MACHINE_HEIGHT, 6*c.BASE_MACHINE_HEIGHT))
+        entity_manager.add_entity(im)
+        
+        # cables
+        node1 = m.get_item_node("out_main")
+        node2 = im.get_item_nodes('input')[0]
+        if node1 and node2:
+            entity_manager.add_entity(TransferLink(node1.abs_pos, node2.abs_pos, "basic_conveyor"))
+        node1 = st.get_energy_nodes()[0]
+        node2 = m.get_energy_nodes()[0]
+        if node1 and node2:
+            entity_manager.add_entity(PowerCable(node1.abs_pos, node2.abs_pos, "basic_cable"))
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
@@ -43,62 +74,6 @@ class Game:
         self.fps_update_time = 0.0
         
         # debug/testing entities
-        m = Machine("rock_crusher", (0, 0))
-        m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
-        entity_manager.add_entity(m)
-        
-        input_node = m.get_item_node("in_main")
-        if input_node:
-            input_node.item = "item.stone"
-            input_node.quantity += 500
-
-        # m = Machine("rock_crusher", (0, 5*c.BASE_MACHINE_HEIGHT))
-        # m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
-        # entity_manager.add_entity(m)
-        
-        # input_node = m.get_item_node("in_main")
-        # if input_node:
-        #     input_node.item = "item.stone"
-        #     input_node.quantity += 500
-        
-        # m = Machine("rock_crusher", (0, 10*c.BASE_MACHINE_HEIGHT))
-        # m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
-        # entity_manager.add_entity(m)
-        
-        # input_node = m.get_item_node("in_main")
-        # if input_node:
-        #     input_node.item = "item.stone"
-        #     input_node.quantity += 500
-        
-        st = Machine("basic_steam_turbine", (4*c.BASE_MACHINE_HEIGHT, -4*c.BASE_MACHINE_HEIGHT))
-        entity_manager.add_entity(st)
-        input_node = st.get_item_node("steam_in")
-        if input_node:
-            input_node.item = "fluid.steam_low_pressure"
-            input_node.quantity += 1000000
-        # print(f"steam turbine name: {st.name}")
-        
-        # link = PowerCable((108, -48), (-100, 0), "basic_cable")
-        # entity_manager.add_entity(link)
-        # link = PowerCable((-100, 0), (24, 0), "basic_cable")
-        # entity_manager.add_entity(link)
-        # link.dirty = True
-        # link = TransferLink((0, 24), (100, 50), "basic_conveyor")
-        # entity_manager.add_entity(link)
-        # link = TransferLink((100, 50), (96, 12), "basic_conveyor")
-        # entity_manager.add_entity(link)
-        # link = TransferLink((100, 50), (200, 100), "basic_conveyor")
-        # entity_manager.add_entity(link)
-        # link = TransferLink((0, 264), (4*c.BASE_MACHINE_WIDTH, 264), "basic_conveyor")
-        # entity_manager.add_entity(link)
-        # link = TransferLink((4*c.BASE_MACHINE_WIDTH, 264), (100, 50), "basic_conveyor")
-        # entity_manager.add_entity(link)
-        tool_manager.select_tool("link")
-        # tool_manager.context.selected_link_type = "basic_conveyor"
-        # tool_manager.context.selected_link_type = "basic_cable"
-        
-        im = Machine("importer", (4*c.BASE_MACHINE_HEIGHT, 0))
-        entity_manager.add_entity(im)
         
     def run(self) -> None:
         while self.running:
@@ -138,6 +113,9 @@ class Game:
             else:
                 logger.debug("deselected tool_manager selected_link_type")
                 tool_manager.context.selected_link_type = None
+        if key == pg.K_3:
+            print("Entities: " + str(len(entity_manager.entities)))
+
         # if key == pg.K_k:
         #     input_node = entity_manager.get_machine_at_position((0, 0))
         #     if not input_node:

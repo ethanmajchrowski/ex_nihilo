@@ -18,7 +18,7 @@ components_dict = {
 }
 
 class Machine(SimulationEntity):
-    def __init__(self, machine_id: str, position: tuple[int, int]) -> None:
+    def __init__(self, machine_id: str, position: tuple[int, int], rotation: int = 0) -> None:
         self.machine_id = machine_id
         json = data_registry.machines[self.machine_id]
         # Size is in tiles (width, height)
