@@ -62,6 +62,7 @@ class Simulation:
             ticked_entities.add(link)
         
         for other in entity_manager.get_tickable_entities():
-            other.tick()
-            if other not in ticked_entities:
-                logger.warning(f"Entity {other} not ticked deliberately in simulation!")
+            if hasattr(other, 'tick'):
+                other.tick() # type: ignore
+                if other not in ticked_entities:
+                    logger.warning(f"Entity {other} not ticked deliberately in simulation!")

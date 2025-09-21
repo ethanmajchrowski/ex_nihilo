@@ -10,6 +10,3 @@ class SimulationEntity:
         self.y = y
         self.position = (x, y)
         self.enabled = enabled
-
-    def tick(self):
-        raise NotImplementedError

@@ -36,6 +36,11 @@ class InputManager:
         selected_item = entity_manager.get_machine_under_position(self.camera.screen_to_world(self.last_mouse_pos))
         if selected_item:
             return selected_item
+
+        # resource nodes
+        selected_item = entity_manager.get_resource_node_under_position(self.camera.screen_to_world(self.last_mouse_pos))
+        if selected_item:
+            return selected_item
         
         # todo figure out how to do transfer links ?
 

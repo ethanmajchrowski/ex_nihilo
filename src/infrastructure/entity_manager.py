@@ -3,6 +3,7 @@ if TYPE_CHECKING:
     from game.simulation_entity import SimulationEntity
 from game.machine import Machine
 from game.transfer_link import TransferLink
+from game.resource_node import ResourceNode
 from game.power_cable import PowerCable
 import data.configuration as c
 
@@ -18,6 +19,9 @@ class _EntityManager:
     
     def get_tickable_entities(self):
         return [e for e in self.entities if hasattr(e, "tick")]
+
+    def get_resource_nodes(self):
+        return [e for e in self.entities if isinstance(e, ResourceNode)]
 
     def get_transfer_links(self):
         return [e for e in self.entities if isinstance(e, TransferLink)]
@@ -44,6 +48,16 @@ class _EntityManager:
                 y = machine.position[1] + tile_y * c.BASE_MACHINE_HEIGHT
                 if (x <= px <= x + c.BASE_MACHINE_WIDTH) and (y <= py <= y + c.BASE_MACHINE_HEIGHT):
                     return machine
+        return None
+
+    def get_resource_node_under_position(self, position: tuple[int, int]) -> None | ResourceNode:
+        px, py = position
+        for resource_node in self.get_resource_nodes():
+            x = resource_node.position[0]
+            y = resource_node.position[1]
+            
+            if (x <= px <= x + resource_node.size[0]) and (y <= py <= y + resource_node.size[1]):
+                return resource_node
         return None
 
 entity_manager = _EntityManager()

@@ -1,5 +1,6 @@
 {
     "id": "wood_node",
+    "size": [1,1],
     "drop_table": {
         "item.wood": {
             "count": [1, 3],

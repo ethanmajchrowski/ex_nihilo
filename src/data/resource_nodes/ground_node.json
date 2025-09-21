@@ -1,5 +1,6 @@
 {
     "id": "ground_node",
+    "size": [2, 2],
     "drop_table": {
         "item.stone": {
             "count": [1, 2],

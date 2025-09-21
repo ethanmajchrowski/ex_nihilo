@@ -9,6 +9,7 @@ import data.configuration as c
 class AssetManager:
     def __init__(self) -> None:
         self.assets: dict[str, dict[str, Any]] = {}
+        self.missing_texture = pg.transform.scale(pg.image.load(r"assets\graphics\misc\null.png"), (64, 64))
     
     def register_group(self, group_name: str):
         self.assets.setdefault(group_name, {})
@@ -18,7 +19,10 @@ class AssetManager:
         self.assets[group][name] = asset
 
     def get(self, group: str, name: str):
-        return self.assets[group][name]
+        if group in self.assets and name in self.assets[group]:
+            return self.assets[group][name]
+        else:
+            return self.missing_texture
     
     def load_image(self, path: str, size: tuple[int, int] | None = c.BASE_MACHINE_SIZE) -> pg.Surface:
         start_time = time.perf_counter()

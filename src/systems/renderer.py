@@ -55,6 +55,14 @@ class Renderer:
         # tile_rect = pg.Rect(camera.world_to_screen(input_manager.last_mouse_pos_snapped), (c.BASE_MACHINE_WIDTH/2, c.BASE_MACHINE_HEIGHT/2))
         # pg.draw.rect(surface, (60, 60, 60), tile_rect)
         # pg.draw.circle(surface, (255, 0, 0), camera.world_to_screen(input_manager.mouse_pos_closest_corner), 5)
+        resource_nodes = entity_manager.get_resource_nodes()
+        for node in resource_nodes:
+            pos = camera.world_to_screen(node.position)
+            # print(node.type)
+            img = asset_manager.get("resource_nodes", node.type)
+            surface.blit(img, pos)
+        
+        
         machines = entity_manager.get_machines()
         for machine in machines:
             pos = camera.world_to_screen(machine.position)
@@ -130,3 +138,12 @@ class Renderer:
         
         f = self.debug_font.render(str(input_manager.last_mouse_pos_snapped), True, (255, 255, 255))
         surface.blit(f, (10, 40))
+        
+        hovered_item = input_manager.hovered_item
+        if hovered_item:
+            obj_name = str(input_manager.hovered_item).split('.')[2].split(' ')[0]
+        else:
+            obj_name = "Nothing hovered"
+        f = self.debug_font.render(str(obj_name), True, (255, 255, 255))
+        surface.blit(f, (10, 40+40*1))
+    

@@ -1,4 +1,5 @@
 from sys import exit
+from os import listdir
 
 import pygame as pg
 
@@ -8,9 +9,11 @@ from infrastructure.entity_manager import entity_manager
 from infrastructure.event_bus import event_bus
 from infrastructure.input_manager import input_manager
 from infrastructure.tool_manager import tool_manager
+from infrastructure.asset_manager import asset_manager
 from game.machine import Machine
 from game.power_cable import PowerCable
 from game.transfer_link import TransferLink
+from game.resource_node import ResourceNode
 from logger import logger
 from systems.camera import Camera
 from systems.renderer import Renderer
@@ -48,6 +51,18 @@ def optimization_test():
         if node1 and node2:
             entity_manager.add_entity(PowerCable(node1.abs_pos, node2.abs_pos, "basic_cable"))
 
+def load_assets():
+    for file in listdir(r"assets\graphics\resource_nodes"):
+        name = file[:-4]
+
+        if name not in data_registry.resource_nodes:
+            continue
+        
+        size = data_registry.resource_nodes[name]['size']
+        size = (size[0]*c.BASE_MACHINE_HEIGHT, size[1]*c.BASE_MACHINE_WIDTH)
+        asset = asset_manager.load_image(f"assets/graphics/resource_nodes/{name}.png", size)
+        asset_manager.add_asset("resource_nodes", name, asset)
+
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
         # variables
@@ -73,7 +88,11 @@ class Game:
         # fps time for debug
         self.fps_update_time = 0.0
         
+        load_assets()
+        
         # debug/testing entities
+        entity_manager.add_entity(ResourceNode((0, 0), "ground_node"))
+        entity_manager.add_entity(Machine("rock_crusher", (3*c.BASE_MACHINE_WIDTH, 0)))
         
     def run(self) -> None:
         while self.running:
