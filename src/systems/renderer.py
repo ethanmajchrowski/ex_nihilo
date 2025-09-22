@@ -5,9 +5,10 @@ from infrastructure.asset_manager import asset_manager
 from infrastructure.entity_manager import entity_manager
 from infrastructure.global_inventory import global_inventory
 from infrastructure.input_manager import input_manager
-from infrastructure.tool_manager import tool_manager, LinkTool
+from infrastructure.tool_manager import tool_manager, LinkTool, PlaceTool
 from infrastructure.io_registry import io_registry
-from infrastructure.utils import interpolate_color
+from infrastructure.data_registry import data_registry
+from infrastructure.utils import interpolate_color, get_footprint_center
 from systems.camera import Camera
 
 
@@ -128,13 +129,40 @@ class Renderer:
                     pg.draw.aaline(surface, (135, 135, 135), 
                                    camera.world_to_screen(tool_manager.current_tool.start_pos), 
                                    camera.world_to_screen(input_manager.mouse_pos_closest_corner), 2)
+            if isinstance(tool_manager.current_tool, PlaceTool):
+                if tool_manager.context.selected_machine_id:
+                    # get machine center position
+                    mouse_pos = camera.world_to_screen(input_manager.mouse_pos_closest_corner)
+                    machine_data = data_registry.machines[tool_manager.context.selected_machine_id]
+                    fpx, fpy = get_footprint_center(machine_data['footprint'])
+                    center_pos = (mouse_pos[0] - fpx*c.BASE_MACHINE_WIDTH, mouse_pos[1] - fpy*c.BASE_MACHINE_HEIGHT)
+
+                    # draw machine profile
+                    for x, y in machine_data['footprint']:
+                        pos = (center_pos[0] + x*c.BASE_MACHINE_WIDTH, center_pos[1] + (y*c.BASE_MACHINE_HEIGHT))
+                        pg.draw.rect(surface, (100//2, 100//2, 100//2), (pos, c.BASE_MACHINE_SIZE))
+                    
+                    # draw node previews
+                    for node in machine_data["ionodes"]:
+                        ox, oy = node['offset']
+                        pos = (center_pos[0] + ox*c.BASE_MACHINE_WIDTH, center_pos[1] + oy*c.BASE_MACHINE_HEIGHT)
+                        if node['type'] == 'energy':
+                            color = (255//2, 0, 0)
+                        elif node['type'] == 'item':
+                            if node['direction'] == "input":
+                                color = (0, 0, int(255*0.7))
+                            if node['direction'] == "output":
+                                color = (int(204*0.7), int(102*0.7), int(51*0.7))
+                        elif node['type'] == 'fluid':
+                            color = (0, 0, 255)
+                        pg.draw.circle(surface, color, pos, 4)
         
         # debug labels
         f = self.debug_font.render(str(camera.screen_to_world(mouse_pos)), True, (255, 255, 255))
         surface.blit(f, (10, 10))
-        w = f.get_width()
+
         f = self.debug_font.render("\n".join([f"{key}: {val}" for key, val in global_inventory._inventory.items()]), True, (255, 255, 255))
-        surface.blit(f, (w+15, 10))
+        surface.blit(f, (surface.width - f.get_width() - 15, 10))
         
         f = self.debug_font.render(str(input_manager.last_mouse_pos_snapped), True, (255, 255, 255))
         surface.blit(f, (10, 40))

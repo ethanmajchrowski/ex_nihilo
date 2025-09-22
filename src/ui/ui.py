@@ -664,7 +664,7 @@ class UIMachineConfig(UIElement):
         
         recipe_text = "N/A"
         recipe_component = self.machine.get_component("RecipeRunner")
-        if recipe_component:
+        if recipe_component and recipe_component.selected_recipe:
             recipe_text = recipe_component.selected_recipe.name
         txt = self.font.render(f"Recipe: {recipe_text}", antialias=True, color=(255, 255, 255))
         surface.blit(txt, global_rect.move(5, 5+txt.get_height()*1))

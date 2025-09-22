@@ -39,16 +39,27 @@ class _EntityManager:
         for machine in self.get_machines():
             if machine.position == position:
                 return machine
-    
+        
     def get_machine_under_position(self, position: tuple[int, int]) -> None | Machine:
         px, py = position
         for machine in self.get_machines():
+            # quick bounding box check
+            x_min = machine.position[0]
+            y_min = machine.position[1]
+            x_max = x_min + max(tx for tx, _ in machine.shape) * c.BASE_MACHINE_WIDTH + c.BASE_MACHINE_WIDTH
+            y_max = y_min + max(ty for _, ty in machine.shape) * c.BASE_MACHINE_HEIGHT + c.BASE_MACHINE_HEIGHT
+
+            if not (x_min <= px <= x_max and y_min <= py <= y_max):
+                continue  # skip this machine entirely
+
+            # check each tile
             for tile_x, tile_y in machine.shape:
                 x = machine.position[0] + tile_x * c.BASE_MACHINE_WIDTH
                 y = machine.position[1] + tile_y * c.BASE_MACHINE_HEIGHT
                 if (x <= px <= x + c.BASE_MACHINE_WIDTH) and (y <= py <= y + c.BASE_MACHINE_HEIGHT):
                     return machine
         return None
+
 
     def get_resource_node_under_position(self, position: tuple[int, int]) -> None | ResourceNode:
         px, py = position

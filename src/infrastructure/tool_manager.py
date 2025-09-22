@@ -1,14 +1,19 @@
 from math import atan2, degrees
 from typing import Literal
 
+import data.configuration as c
+
 from components.ionode import EnergyIONode, ItemIONode
 from infrastructure.data_registry import data_registry
 from infrastructure.entity_manager import entity_manager
 from infrastructure.event_bus import event_bus
 from infrastructure.input_manager import input_manager
 from infrastructure.io_registry import io_registry
+from infrastructure.global_inventory import global_inventory
 from game.power_cable import PowerCable
 from game.transfer_link import TransferLink
+from game.machine import Machine
+from infrastructure.utils import get_footprint_center, tiles_overlap
 from infrastructure.transfer_registry import transfer_registry, cable_registry
 from logger import logger
 
@@ -31,6 +36,39 @@ class ToolContext:
         self.preview_rotation: int = 0
 
 #* === Tool classes === *#
+class PlaceTool(Tool):
+    def __init__(self, tool_manager: "_ToolManager") -> None:
+        super().__init__("Place")
+        self.tool_manager = tool_manager
+    
+    def on_mouse_down(self, world_pos, screen_pos, button):
+        if self.tool_manager.context.selected_machine_id:
+            num_stored = global_inventory.get_item(self.tool_manager.context.selected_machine_id)
+            if num_stored < 1:
+                self.tool_manager.deselect_tool()
+                return
+
+            mouse_pos = input_manager.mouse_pos_closest_corner
+            machine_data = data_registry.machines[self.tool_manager.context.selected_machine_id]
+            fpx, fpy = get_footprint_center(machine_data['footprint'])
+            center_pos = (
+                int(mouse_pos[0] - fpx * c.BASE_MACHINE_WIDTH),
+                int(mouse_pos[1] - fpy * c.BASE_MACHINE_HEIGHT)
+            )
+
+            # collision check: any overlap with existing machines
+            for machine in entity_manager.get_machines():
+                if tiles_overlap(center_pos, machine_data['footprint'], machine.position, machine.shape):
+                    return  # cancel placement
+
+            # place the machine
+            entity_manager.add_entity(Machine(self.tool_manager.context.selected_machine_id, center_pos)) 
+            global_inventory.remove_item(self.tool_manager.context.selected_machine_id, 1)   
+
+            if num_stored - 1 < 1:
+                self.tool_manager.deselect_tool()
+                return
+
 class LinkTool(Tool):
     def __init__(self, tool_manager: "_ToolManager") -> None:
         super().__init__("Link")
@@ -133,7 +171,8 @@ class _ToolManager:
     def __init__(self) -> None:
         self.current_tool: Tool | None = None
         self.tools: dict[str, Tool] = {
-            "link": LinkTool(self)
+            "link": LinkTool(self),
+            "place": PlaceTool(self)
         }
         self.context = ToolContext()
 

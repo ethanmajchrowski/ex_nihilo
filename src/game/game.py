@@ -10,6 +10,7 @@ from infrastructure.event_bus import event_bus
 from infrastructure.input_manager import input_manager
 from infrastructure.tool_manager import tool_manager
 from infrastructure.asset_manager import asset_manager
+from infrastructure.global_inventory import global_inventory
 from game.machine import Machine
 from game.power_cable import PowerCable
 from game.transfer_link import TransferLink
@@ -20,8 +21,8 @@ from systems.renderer import Renderer
 from systems.simulation import Simulation
 from ui.ui import UIManager
 
-def optimization_test():
-    for i in range(100):
+def optimization_test(num_setups: int):
+    for i in range(num_setups):
         m = Machine("rock_crusher", (i * 4 * c.BASE_MACHINE_WIDTH, 0))
         m.components["RecipeRunner"].selected_recipe = data_registry.get_compatible_recipes(m.components["RecipeRunner"].capabilities)[0]
         entity_manager.add_entity(m)
@@ -87,13 +88,17 @@ class Game:
         
         # fps time for debug
         self.fps_update_time = 0.0
+        self.fps_history = []
         
         load_assets()
         
         # debug/testing entities
         entity_manager.add_entity(ResourceNode((0, 0), "ground_node"))
         entity_manager.add_entity(Machine("rock_crusher", (3*c.BASE_MACHINE_WIDTH, 0)))
-        
+        for machine in data_registry.machines.keys():
+            global_inventory.add_item(machine, 2)
+
+
     def run(self) -> None:
         while self.running:
             dt = self.clock.tick() / 1000 # clock.tick returns milliseconds as integer so we convert to seconds since last frame by / 1000
@@ -107,17 +112,35 @@ class Game:
             
             pg.display.update()
 
+            self.fps_history.append(self.clock.get_fps())
+            if len(self.fps_history) > 1000: # 1000 frames stored
+                self.fps_history.pop(0)
+
+            avg_fps = sum(self.fps_history) / len(self.fps_history)
+
             if self.fps_update_time < 0.25:
                 self.fps_update_time += dt
             else:
                 tps, target_tps = self.simulation_manager.tps
-                pg.display.set_caption(f"EX NIHILO | FPS: {round(self.clock.get_fps())} | TPS: {tps}/{target_tps}")
+                pg.display.set_caption(
+                    f"EX NIHILO | FPS: {avg_fps:.1f} | TPS: {tps}/{target_tps}"
+                )
                 self.fps_update_time = 0.0
 
         pg.quit()
         exit()
     
     def debug_keys(self, key):
+        if key == pg.K_r:
+            tools = list(tool_manager.tools.values())
+            if tool_manager.current_tool:
+                current_idx = tools.index(tool_manager.current_tool) + 1
+                if current_idx >= len(tools): current_idx = 0
+                tool_manager.select_tool(tools[current_idx].name.lower())
+                logger.debug(f"Selected {tool_manager.current_tool.name} tool")
+            else:
+                tool_manager.select_tool(tools[0].name.lower())
+                logger.debug(f"Selected {tools[0].name.lower()} tool")
         if key == pg.K_1:
             if tool_manager.context.selected_link_type != "basic_conveyor":
                 tool_manager.context.selected_link_type = "basic_conveyor"
@@ -133,7 +156,16 @@ class Game:
                 logger.debug("deselected tool_manager selected_link_type")
                 tool_manager.context.selected_link_type = None
         if key == pg.K_3:
-            print("Entities: " + str(len(entity_manager.entities)))
+            all_machines = list(data_registry.machines.keys())
+            if tool_manager.context.selected_machine_id:
+                idx = all_machines.index(tool_manager.context.selected_machine_id) + 1
+                if idx >= len(all_machines): idx = 0
+                tool_manager.context.selected_machine_id = all_machines[idx]
+            else:
+                tool_manager.context.selected_machine_id = all_machines[0]
+            logger.debug(f"[tool_manager.context] selected_machine_id {tool_manager.context.selected_machine_id}")
+        # if key == pg.K_3:
+        #     print("Entities: " + str(len(entity_manager.entities)))
 
         # if key == pg.K_k:
         #     input_node = entity_manager.get_machine_at_position((0, 0))
