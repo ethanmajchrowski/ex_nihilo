@@ -42,6 +42,8 @@ class PlaceTool(Tool):
         self.tool_manager = tool_manager
     
     def on_mouse_down(self, world_pos, screen_pos, button):
+        if button != 1:
+            return
         if self.tool_manager.context.selected_machine_id:
             num_stored = global_inventory.get_item(self.tool_manager.context.selected_machine_id)
             if num_stored < 1:

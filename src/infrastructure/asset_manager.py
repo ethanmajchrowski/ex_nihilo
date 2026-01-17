@@ -21,8 +21,7 @@ class AssetManager:
     def get(self, group: str, name: str):
         if group in self.assets and name in self.assets[group]:
             return self.assets[group][name]
-        else:
-            return self.missing_texture
+        return self.missing_texture
     
     def load_image(self, path: str, size: tuple[int, int] | None = c.BASE_MACHINE_SIZE) -> pg.Surface:
         start_time = time.perf_counter()
@@ -37,7 +36,7 @@ class AssetManager:
         """
         Path should be to but not including the images. 
             ex. "C:/Workspace/Projects/blender/renders/automation_game/grinder/"
-        Each frame should be named with just a number and file extension (ex. 1.png, 2.svg) with at least
+        Each frame should be named with just a number and file extension (ex. 0000.png, 0001.svg) with at least
         """
         logger.debug(f"Loading animation {path}")
         return [

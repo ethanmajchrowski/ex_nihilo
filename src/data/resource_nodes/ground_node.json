@@ -1,6 +1,7 @@
 {
     "id": "ground_node",
     "size": [2, 2],
+    "toughness": 1,
     "drop_table": {
         "item.stone": {
             "count": [1, 2],

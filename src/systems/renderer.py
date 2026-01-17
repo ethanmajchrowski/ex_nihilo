@@ -66,14 +66,21 @@ class Renderer:
         
         machines = entity_manager.get_machines()
         for machine in machines:
+            surf = asset_manager.get("machines", machine.machine_id)
             pos = camera.world_to_screen(machine.position)
-            for tile in machine.shape:
-                color = (100, 100, 100)
-                if input_manager.hovered_item is machine:
-                    color = (140, 140, 140)
-                pg.draw.rect(surface, color, pg.Rect(
-                    pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
-                    c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
+            if surf != asset_manager.missing_texture:
+                if isinstance(surf, list):
+                    surface.blit(surf[0], pos)
+                else:
+                    surface.blit(surf, pos)
+            else:
+                for tile in machine.shape:
+                    color = (100, 100, 100)
+                    if input_manager.hovered_item is machine:
+                        color = (140, 140, 140)
+                    pg.draw.rect(surface, color, pg.Rect(
+                        pos[0]+tile[0] * c.BASE_MACHINE_WIDTH, pos[1]+tile[1] * c.BASE_MACHINE_HEIGHT, 
+                        c.BASE_MACHINE_WIDTH, c.BASE_MACHINE_HEIGHT))
         
         for cable in entity_manager.get_power_cables():
             start_size, end_size = 2, 2

@@ -63,6 +63,9 @@ def load_assets():
         size = (size[0]*c.BASE_MACHINE_HEIGHT, size[1]*c.BASE_MACHINE_WIDTH)
         asset = asset_manager.load_image(f"assets/graphics/resource_nodes/{name}.png", size)
         asset_manager.add_asset("resource_nodes", name, asset)
+    
+    asset = asset_manager.load_animation("assets/graphics/machine/BasicMiningDrill/", 24, frame_size=(c.BASE_MACHINE_WIDTH*2, c.BASE_MACHINE_HEIGHT*2))
+    asset_manager.add_asset("machines", "basic_mining_drill", asset)
 
 class Game:
     def __init__(self, display_surface: pg.Surface) -> None:
@@ -94,7 +97,8 @@ class Game:
         
         # debug/testing entities
         entity_manager.add_entity(ResourceNode((0, 0), "ground_node"))
-        entity_manager.add_entity(Machine("rock_crusher", (3*c.BASE_MACHINE_WIDTH, 0)))
+        # entity_manager.add_entity(Machine("rock_crusher", (3*c.BASE_MACHINE_WIDTH, 0)))
+        entity_manager.add_entity(Machine("basic_mining_drill", (0, 0), context={"entity_manager":entity_manager}))
         for machine in data_registry.machines.keys():
             global_inventory.add_item(machine, 2)
 
@@ -169,11 +173,9 @@ class Game:
 
         # if key == pg.K_k:
         #     input_node = entity_manager.get_machine_at_position((0, 0))
+        # if key == pg.K_k:
         #     if not input_node:
         #         return
         #     input_node = input_node.get_item_node("out_main")
         #     if input_node:
         #         input_node.item = "item.gravel"
-
-
-

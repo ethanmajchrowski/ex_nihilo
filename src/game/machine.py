@@ -8,23 +8,25 @@ from components.ionode import ItemIONode, EnergyIONode
 from components.PowerConsumer import PowerConsumer
 from components.RecipeRunner import RecipeRunner
 from components.PowerProducer import PowerProducer
+from components.MiningDrill import MiningDrill
 from components.ImporterComponent import ImporterComponent
 from game.simulation_entity import SimulationEntity
 from infrastructure.data_registry import data_registry
 
 components_dict = {
     "RecipeRunner": RecipeRunner, "PowerConsumer": PowerConsumer, "PowerProducer": PowerProducer,
-    "ImporterComponent": ImporterComponent
+    "ImporterComponent": ImporterComponent, "MiningDrill": MiningDrill
 }
 
 class Machine(SimulationEntity):
-    def __init__(self, machine_id: str, position: tuple[int, int], rotation: int = 0) -> None:
+    def __init__(self, machine_id: str, position: tuple[int, int], rotation: int = 0, context: dict[str, Any] = {}) -> None:
         self.machine_id = machine_id
         json = data_registry.machines[self.machine_id]
         # Size is in tiles (width, height)
         self.shape: list[tuple[int, int]] = json["footprint"]
         self.center_tile = json["center"]
         self.name = json["name"]
+        self.context = context
 
         super().__init__(name=self.name, x=position[0], y=position[1])
 
@@ -115,13 +117,3 @@ class Machine(SimulationEntity):
             if isinstance(node, EnergyIONode) and node.id == id:
                 return node
         return None
-
-def get_footprint_center(tile_offsets: list[tuple[int, int]]) -> tuple[float, float]:
-    # eventually will likely use to center sprites, although top left might end up being easier. hmm...
-    if not tile_offsets:
-        return (0.0, 0.0)
-
-    avg_x = sum(tile[0] for tile in tile_offsets) / len(tile_offsets)
-    avg_y = sum(tile[1] for tile in tile_offsets) / len(tile_offsets)
-
-    return (avg_x, avg_y)

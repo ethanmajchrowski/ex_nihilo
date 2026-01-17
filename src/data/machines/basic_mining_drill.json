@@ -1,0 +1,35 @@
+{
+    "id": "basic_mining_drill",
+    "name": "Basic Mining Drill",
+    "placement_restrictions": ["on_resource_node"],
+    "footprint": [
+        [0, 0], [1, 0],
+        [0, 1], [1, 1]
+    ],
+    "center": [0, 0],
+    "components": {
+        "MiningDrill": {
+            "level": 1
+        },
+        "PowerConsumer": {
+            "watts_required": 600,
+            "idle_watts": 0,
+            "voltage": "LV"
+        }
+    },
+    "ionodes": [
+        {
+            "id": "out_main",
+            "type": "item",
+            "direction": "output",
+            "capacity": 10,
+            "offset": [2.0, 1.0]
+        },
+        {
+            "id": "power",
+            "type": "energy",
+            "direction": "input",
+            "offset": [0.0, 1.0]
+        }
+    ]
+}
