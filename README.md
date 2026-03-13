@@ -62,7 +62,7 @@ Clone the repository:
 
 Run the main file:
 
-    python main.py
+    python src/main.py
 
 ------------------------------------------------------------------------
 
